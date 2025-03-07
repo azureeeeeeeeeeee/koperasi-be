@@ -2,13 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    /**
+     * @OA\Post(
+     *     path="/api/auth/login",
+     *     tags={"Authentication"},
+     *     summary="User login",
+     *     description="Authenticate a user and return a token",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email","password"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Login successful"),
+     *     @OA\Response(response=404, description="Invalid username or password")
+     * )
+     */
     public function login(Request $request) {
         $request->validate([
             'email' => 'required|email',
@@ -19,7 +36,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
-                "message" => "Username atau password salah !"
+                "message" => "Username atau password salah!"
             ], 404);
         }
 
@@ -38,6 +55,28 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/auth/register",
+     *     tags={"Authentication"},
+     *     summary="User registration",
+     *     description="Register a new user",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"fullname", "email", "password", "password_confirmation"},
+     *             @OA\Property(property="fullname", type="string", example="John Doe"),
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
+     *             @OA\Property(property="tipe", type="string", enum={"pengguna","pegawai","penitip","admin"}, example="pengguna"),
+     *             @OA\Property(property="status_keanggotaan", type="string", enum={"aktif","tidak aktif","bukan anggota"}, example="aktif")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="User registered successfully"),
+     *     @OA\Response(response=400, description="Validation error")
+     * )
+     */
     public function register(Request $request) {
         $fields = $request->validate([
             'fullname' => 'required|string|max:255',
@@ -46,7 +85,6 @@ class AuthController extends Controller
             'tipe' => 'nullable|in:pengguna,pegawai,penitip,admin',
             'status_keanggotaan' => 'nullable|in:aktif,tidak aktif,bukan anggota',
         ]);
-
 
         $user = User::create($fields);
         $token = $user->createToken($request->email)->plainTextToken;
@@ -65,6 +103,17 @@ class AuthController extends Controller
         );
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/auth/logout",
+     *     tags={"Authentication"},
+     *     summary="User logout",
+     *     description="Logs out the authenticated user",
+     *     security={{ "bearerAuth": {} }},
+     *     @OA\Response(response=200, description="Logout successful"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
     public function logout(Request $request) {
         $request->user()->tokens()->delete();
 
