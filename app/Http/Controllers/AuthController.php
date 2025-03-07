@@ -121,6 +121,10 @@ class AuthController extends Controller
             "message" => "Logout berhasil"
         ];
 
-        return response()->json($data, 200);
+        return response()->json($data, 200)->cookie(
+            "TOKENID",
+            null,
+            -1
+        );
     }
 }
