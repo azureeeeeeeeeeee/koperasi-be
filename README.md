@@ -1,1 +1,1 @@
-# baca md di /docs dulu
+# baca file yang ada di /docs dulu
