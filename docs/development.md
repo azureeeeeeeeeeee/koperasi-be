@@ -8,7 +8,7 @@ Composer LTS
 ## Development
 
 ### **Git fetch**
-jangan lupa ```git fetch``` sebelum memulai ngoding, takutnya ada perubahan yang belum diambil dari remote repo
+jangan lupa ```git fetch --all --prune``` sebelum memulai ngoding, takutnya ada perubahan yang belum diambil dari remote repo
 
 ### **Commit message**
 Commit message kasih yang bagus, kayak :
