@@ -69,38 +69,72 @@ class AuthController extends Controller
      *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="password123"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
-     *             @OA\Property(property="tipe", type="string", enum={"pengguna","pegawai","penitip","admin"}, example="pengguna"),
-     *             @OA\Property(property="status_keanggotaan", type="string", enum={"aktif","tidak aktif","bukan anggota"}, example="aktif")
      *         )
      *     ),
      *     @OA\Response(response=201, description="User registered successfully"),
      *     @OA\Response(response=400, description="Validation error")
      * )
      */
-    public function register(Request $request) {
+
+    public function register_penitip(Request $request) {
         $fields = $request->validate([
             'fullname' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
-            'password' => 'required|confirmed|min:8',
-            'tipe' => 'nullable|in:pengguna,pegawai,penitip,admin',
-            'status_keanggotaan' => 'nullable|in:aktif,tidak aktif,bukan anggota',
+            'password' => 'required|confirmed|min:8'
         ]);
 
         $user = User::create($fields);
-        $token = $user->createToken($request->email)->plainTextToken;
+
+        $user->tipe = 'penitip';
+        $user->save();
 
         $data = [
             'message' => 'User berhasil register'
         ];
 
-        return response()->json($data, 201)->cookie(
-            'TOKENID',
-            $token,
-            1440,
-            null,
-            false,
-            false
-        );
+        return response()->json($data, 201);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/auth/register",
+     *     tags={"Authentication"},
+     *     summary="User registration",
+     *     description="Register a new user",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"fullname", "email", "password", "password_confirmation"},
+     *             @OA\Property(property="fullname", type="string", example="John Doe"),
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="password123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="User registered successfully"),
+     *     @OA\Response(response=400, description="Validation error")
+     * )
+     */
+    public function register_pengguna(Request $request) {
+        $fields = $request->validate([
+            'fullname' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|confirmed|min:8',
+        ]);
+
+        $emailParts = explode('@', $fields['email']);
+    
+        if (isset($emailParts[1]) && strpos($emailParts[1], '.itk.ac.id') === false) {
+            return response()->json(['message' => 'Daftar sebagai pengguna harus menggunakan email ITK'], 400);
+        }
+
+        $user = User::create($fields);
+
+        $data = [
+            'message' => 'User berhasil register'
+        ];
+
+        return response()->json($data, 201);
     }
 
     /**

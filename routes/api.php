@@ -18,7 +18,8 @@ Route::get('', function () {
 
 // Authentication Routes
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
+    Route::post('/register/penitip', [AuthController::class, 'register_penitip'])->name('auth.register.penitip');
+    Route::post('/register/pengguna', [AuthController::class, 'register_pengguna'])->name('auth.register.pengguna');
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
 });
