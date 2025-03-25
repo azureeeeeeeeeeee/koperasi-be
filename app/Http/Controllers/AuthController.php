@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\Otp;
+use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -161,4 +162,59 @@ class AuthController extends Controller
             -1
         );
     }
+
+    public function sendOtp(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+    
+        $user = User::where('email', $request->email)->first();
+    
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+    
+        // Generate a 6-digit OTP
+        $otpCode = random_int(100000, 999999);
+    
+        // Store OTP in the database
+        Otp::create([
+            'user_id' => $user->id,
+            'otp' => $otpCode,
+            'expires_at' => Carbon::now()->addMinutes(5), // OTP valid for 5 minutes
+        ]);
+    
+        // Send OTP via email or SMS (use Laravel Notifications or a mail service)
+        // Example: Mail::to($user->email)->send(new OtpMail($otpCode));
+    
+        return response()->json(['message' => 'OTP sent successfully']);
+    }
+    
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'otp' => 'required|string',
+        ]);
+    
+        $user = User::where('email', $request->email)->first();
+    
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+    
+        $otp = Otp::where('user_id', $user->id)
+            ->where('otp', $request->otp)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+    
+        if (!$otp) {
+            return response()->json(['message' => 'Invalid or expired OTP'], 400);
+        }
+    
+        // OTP is valid, delete it
+        $otp->delete();
+    
+        return response()->json(['message' => 'OTP verified successfully']);
+    }
+    
 }
