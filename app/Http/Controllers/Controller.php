@@ -15,6 +15,10 @@ namespace App\Http\Controllers;
  *     name="Authentication",
  *     description="API endpoints for user authentication"
  * )
+ * @OA\Tag(
+ *     name="Admin",
+ *     description="API endpoints for admin control"
+ * )
  */
 abstract class Controller
 {

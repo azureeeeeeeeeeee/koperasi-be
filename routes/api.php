@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,18 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
     Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
+
+
+});
+
+// Admin Routes
+Route::prefix('admin')->group(function () {
+    Route::post('/user', [AdminController::class, 'create_pengguna'])->name('admin.create.pengguna')->middleware('auth:sanctum');
+    Route::delete('/user', [AdminController::class, 'delete_pengguna'])->name('admin.delete.pengguna')->middleware('auth:sanctum');
+    // Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
+    // Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
+    // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
+    // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
 
 
 });
