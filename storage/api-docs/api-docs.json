@@ -6,6 +6,61 @@
     },
     "paths": {
         "/api": {},
+        "/api/admin/user": {
+            "post": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Create User",
+                "description": "Create a new user",
+                "operationId": "8ac9645d494a61e0994dc1699039c603",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "fullname",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "fullname": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User berhasil dibuat"
+                    },
+                    "400": {
+                        "description": "Daftar sebagai pengguna harus menggunakan email ITK"
+                    }
+                }
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "tags": [
@@ -50,14 +105,14 @@
                 }
             }
         },
-        "/api/auth/register": {
+        "/api/auth/register/penitip": {
             "post": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "User registration",
-                "description": "Register a new user",
-                "operationId": "d764dd091cc4494ae0baf360b03319f3",
+                "description": "Register a new user (penitip)",
+                "operationId": "0204c93e352438c78a42a6d3437e1046",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -88,25 +143,6 @@
                                         "type": "string",
                                         "format": "password",
                                         "example": "password123"
-                                    },
-                                    "tipe": {
-                                        "type": "string",
-                                        "enum": [
-                                            "pengguna",
-                                            "pegawai",
-                                            "penitip",
-                                            "admin"
-                                        ],
-                                        "example": "pengguna"
-                                    },
-                                    "status_keanggotaan": {
-                                        "type": "string",
-                                        "enum": [
-                                            "aktif",
-                                            "tidak aktif",
-                                            "bukan anggota"
-                                        ],
-                                        "example": "aktif"
                                     }
                                 },
                                 "type": "object"
@@ -116,10 +152,65 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "User registered successfully"
+                        "description": "User berhasil register"
                     },
                     "400": {
                         "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/auth/register/pengguna": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "User registration",
+                "description": "Register a new user",
+                "operationId": "44d392e26e446e75d279db0d0d9f06f6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "fullname",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "fullname": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User berhasil register"
+                    },
+                    "400": {
+                        "description": "Daftar sebagai pengguna harus menggunakan email ITK"
                     }
                 }
             }
@@ -160,6 +251,10 @@
         {
             "name": "Authentication",
             "description": "API endpoints for user authentication"
+        },
+        {
+            "name": "Admin",
+            "description": "API endpoints for admin control"
         }
     ]
 }

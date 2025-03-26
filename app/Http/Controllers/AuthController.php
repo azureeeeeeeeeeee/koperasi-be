@@ -58,10 +58,10 @@ class AuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/register",
+     *     path="/api/auth/register/penitip",
      *     tags={"Authentication"},
      *     summary="User registration",
-     *     description="Register a new user",
+     *     description="Register a new user (penitip)",
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
@@ -72,7 +72,7 @@ class AuthController extends Controller
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
      *         )
      *     ),
-     *     @OA\Response(response=201, description="User registered successfully"),
+     *     @OA\Response(response=201, description="User berhasil register"),
      *     @OA\Response(response=400, description="Validation error")
      * )
      */
@@ -98,7 +98,7 @@ class AuthController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/register",
+     *     path="/api/auth/register/pengguna",
      *     tags={"Authentication"},
      *     summary="User registration",
      *     description="Register a new user",
@@ -112,8 +112,8 @@ class AuthController extends Controller
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
      *         )
      *     ),
-     *     @OA\Response(response=201, description="User registered successfully"),
-     *     @OA\Response(response=400, description="Validation error")
+     *     @OA\Response(response=201, description="User berhasil register"),
+     *     @OA\Response(response=400, description="Daftar sebagai pengguna harus menggunakan email ITK")
      * )
      */
     public function register_pengguna(Request $request) {
