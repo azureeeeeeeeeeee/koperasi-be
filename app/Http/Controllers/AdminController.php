@@ -23,7 +23,7 @@ class AdminController extends Controller
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
      *         )
      *     ),
-     *     @OA\Response(response=201, description="User registered successfully"),
+     *     @OA\Response(response=201, description="User berhasil dibuat"),
      *     @OA\Response(response=400, description="Daftar sebagai pengguna harus menggunakan email ITK")
      * )
      */
@@ -51,31 +51,31 @@ class AdminController extends Controller
         
     }
 
-    /**
-     * @OA\Delete(
-     *     path="/api/admin/user",
-     *     tags={"Admin"},
-     *     summary="Delete User",
-     *     description="Delete a user",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"fullname", "email", "password", "password_confirmation"},
-     *             @OA\Property(property="fullname", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
-     *         )
-     *     ),
-     *     @OA\Response(response=201, description="User registered successfully"),
-     * )
-     */
-    public function delete_pengguna(Request $request) {
+    // /**
+    //  * @OA\Delete(
+    //  *     path="/api/admin/user",
+    //  *     tags={"Admin"},
+    //  *     summary="Delete User",
+    //  *     description="Delete a user",
+    //  *     @OA\RequestBody(
+    //  *         required=true,
+    //  *         @OA\JsonContent(
+    //  *             required={"fullname", "email", "password", "password_confirmation"},
+    //  *             @OA\Property(property="fullname", type="string", example="John Doe"),
+    //  *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+    //  *             @OA\Property(property="password", type="string", format="password", example="password123"),
+    //  *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
+    //  *         )
+    //  *     ),
+    //  *     @OA\Response(response=201, description="User registered successfully"),
+    //  * )
+    //  */
+    // public function delete_pengguna(Request $request) {
 
-        $data = [
-            'message' => 'User berhasil dihapus'
-        ];
+    //     $data = [
+    //         'message' => 'User berhasil dihapus'
+    //     ];
 
-        return response()->json($data, 201);
-    }
+    //     return response()->json($data, 201);
+    // }
 }
