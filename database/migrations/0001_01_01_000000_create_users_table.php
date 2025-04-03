@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('fullname', 255);
             $table->string('email', 255)->unique();
             $table->string('password', 255);
+            $table->boolean('is_verified')->default(false);
             $table->enum('tipe', ['pengguna', 'pegawai', 'penitip', 'admin'])->notNull()->default('pengguna');
             $table->enum('status_keanggotaan', ['aktif', 'tidak aktif', 'bukan anggota'])->notNull()->default('tidak aktif');
             $table->decimal('saldo', 15, 2)->notNull()->default(0)->check('saldo >= 0');

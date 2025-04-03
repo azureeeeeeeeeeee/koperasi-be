@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('otps', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Foreign key to users table
+            $table->unsignedBigInteger('user_id')->unique(); // Foreign key to users table
             $table->string('otp');
             $table->timestamp('expires_at');
             $table->timestamps();

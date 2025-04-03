@@ -131,10 +131,22 @@ class AuthController extends Controller
 
         $user = User::create($fields);
 
-        $data = [
-            'message' => 'User berhasil register'
-        ];
+        $otp = random_int(100000, 999999);
+        
+    
+        // Store OTP in the database
+        $otpCode = Otp::create([
+            'user_id' => $user->id,
+            'otp' => $otp,
+            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 5 minutes
+        ]);
 
+                  // Kirim email OTP
+            Mail::to($user->email)->send(new OtpMail($otpCode));
+
+            $data = [
+        'message' => 'User berhasil register, OTP telah dikirim ke email Anda'
+    ];
         return response()->json($data, 201);
     }
 
@@ -180,7 +192,7 @@ class AuthController extends Controller
         Otp::create([
             'user_id' => $user->id,
             'otp' => $otpCode,
-            'expires_at' => Carbon::now()->addMinutes(5), // OTP valid for 5 minutes
+            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 5 minutes
         ]);
     
         // Send OTP via email or SMS (use Laravel Notifications or a mail service)
@@ -205,7 +217,7 @@ class AuthController extends Controller
         $otp = Otp::where('user_id', $user->id)
             ->where('otp', $request->otp)
             ->where('expires_at', '>', Carbon::now())
-            ->first();
+            ->first();        
     
         if (!$otp) {
             return response()->json(['message' => 'Invalid or expired OTP'], 400);
