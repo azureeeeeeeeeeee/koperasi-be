@@ -19,6 +19,10 @@ namespace App\Http\Controllers;
  *     name="Admin",
  *     description="API endpoints for admin control"
  * )
+ * @OA\Tag(
+ *     name="Category",
+ *     description="API endpoints to handle Category"
+ * )
  */
 abstract class Controller
 {
