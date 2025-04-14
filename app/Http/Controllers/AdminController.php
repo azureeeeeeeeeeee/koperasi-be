@@ -51,31 +51,215 @@ class AdminController extends Controller
         
     }
 
-    // /**
-    //  * @OA\Delete(
-    //  *     path="/api/admin/user",
-    //  *     tags={"Admin"},
-    //  *     summary="Delete User",
-    //  *     description="Delete a user",
-    //  *     @OA\RequestBody(
-    //  *         required=true,
-    //  *         @OA\JsonContent(
-    //  *             required={"fullname", "email", "password", "password_confirmation"},
-    //  *             @OA\Property(property="fullname", type="string", example="John Doe"),
-    //  *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
-    //  *             @OA\Property(property="password", type="string", format="password", example="password123"),
-    //  *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
-    //  *         )
-    //  *     ),
-    //  *     @OA\Response(response=201, description="User registered successfully"),
-    //  * )
-    //  */
-    // public function delete_pengguna(Request $request) {
+    /**
+     * @OA\Delete(
+     *     path="/api/admin/user/{id}",
+     *     tags={"Admin"},
+     *     summary="Delete User",
+     *     description="Delete a user by ID",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User ID to delete",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User berhasil dihapus",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="User berhasil dihapus")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User tidak ditemukan",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="User tidak ditemukan")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Unauthorized")
+     *         )
+     *     )
+     * )
+     */
+    public function delete_pengguna($id) {
+        $user = User::find($id);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+        
+        $user->delete();
+        
+        return response()->json(['message' => 'User berhasil dihapus'], 200);
+    }
 
-    //     $data = [
-    //         'message' => 'User berhasil dihapus'
-    //     ];
+    /**
+     * @OA\Get(
+     *     path="/api/admin/user",
+     *     tags={"Admin"},
+     *     summary="Get All Users",
+     *     description="Retrieve list of all users",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Daftar user berhasil diambil",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="fullname", type="string", example="John Doe"),
+     *                     @OA\Property(property="email", type="string", example="john@student.itk.ac.id"),
+     *                     @OA\Property(property="tipe", type="string", example="pengguna"),
+     *                     @OA\Property(property="status_keanggotaan", type="string", example="aktif"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time"),
+     *                     @OA\Property(property="updated_at", type="string", format="date-time")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function get_pengguna()
+    {
+        $users = User::all();
+        
+        return response()->json([
+            'data' => $users
+        ], 200);
+    }
 
-    //     return response()->json($data, 201);
-    // }
+    /**
+     * @OA\Get(
+     *     path="/api/admin/user/{id}",
+     *     tags={"Admin"},
+     *     summary="Get User by ID",
+     *     description="Retrieve specific user data",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data user berhasil diambil",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="fullname", type="string", example="John Doe"),
+     *                 @OA\Property(property="email", type="string", example="john@student.itk.ac.id"),
+     *                 @OA\Property(property="tipe", type="string", example="pengguna"),
+     *                 @OA\Property(property="status_keanggotaan", type="string", example="aktif"),
+     *                 @OA\Property(property="created_at", type="string", format="date-time"),
+     *                 @OA\Property(property="updated_at", type="string", format="date-time")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="User tidak ditemukan"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function get_pengguna_by_id($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        return response()->json([
+            'data' => $user
+        ], 200);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/admin/user/{id}",
+     *     tags={"Admin"},
+     *     summary="Update User Data",
+     *     description="Update user information",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="fullname", type="string", example="John Doe Updated"),
+     *             @OA\Property(property="email", type="string", format="email", example="updated@student.itk.ac.id"),
+     *             @OA\Property(property="tipe", type="string", enum={"pengguna", "pegawai", "penitip", "admin"}, example="pengguna"),
+     *             @OA\Property(property="status_keanggotaan", type="string", enum={"aktif", "tidak aktif", "suspended"}, example="active"),
+     *             @OA\Property(property="saldo", type="number", format="float", example=50000),
+     *             @OA\Property(property="password", type="string", format="password", example="newpassword123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="newpassword123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User berhasil diupdate",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Data user berhasil diperbarui"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="User tidak ditemukan"),
+     *     @OA\Response(response=422, description="Validasi error"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function update_pengguna(Request $request, $id)
+    {
+        $user = User::find($id);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User tidak ditemukan'], 404);
+        }
+
+        $validated = $request->validate([
+            'fullname' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,'.$id,
+            'tipe' => 'sometimes|in:penitip,pengguna,pegawai,admin',
+            'status_keanggotaan' => 'sometimes|in:aktif,tidak aktif',
+            'saldo' => 'sometimes|numeric',
+            'password' => 'sometimes|confirmed|min:8'
+        ]);
+
+        if ($request->has('email')) {
+            $emailParts = explode('@', $request->email);
+            if (!isset($emailParts[1]) || strpos($emailParts[1], '.itk.ac.id') === false) {
+                return response()->json(['message' => 'Email harus menggunakan domain ITK'], 422);
+            }
+        }
+
+        if (!empty($validated['password'])) {
+            $validated['password'] = bcrypt($validated['password']);
+        }
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Data user berhasil diperbarui',
+            'data' => $user->makeHidden(['created_at', 'updated_at'])
+        ], 200);
+    }
 }

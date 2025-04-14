@@ -31,33 +31,10 @@ Route::prefix('auth')->group(function () {
 });
 
 // Admin Routes
-Route::prefix('admin')->group(function () {
-    Route::post('/user', [AdminController::class, 'create_pengguna'])->name('admin.create.pengguna')->middleware('auth:sanctum');
-    Route::delete('/user', [AdminController::class, 'delete_pengguna'])->name('admin.delete.pengguna')->middleware('auth:sanctum');
-    // Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
-    // Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
-    // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
-    // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
-
-});
-
-// Product Routes
-Route::prefix('product')->group(function () {
-    Route::get('/', [ProductController::class, 'show_all_product'])->name('product.index');
-    Route::get('/{product}', [ProductController::class, 'get_product_data'])->name('product.show');
-
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/', [ProductController::class, 'create_product'])->name('product.store');
-        Route::put('/{product}', [ProductController::class, 'update_product_data'])->name('product.update');
-        Route::delete('/{product}', [ProductController::class, 'remove_product'])->name('product.destroy');
-    });
-});
-
-// Category Routes
-Route::prefix('category')->group(function () {
-    Route::get('/', [CategoryController::class, 'get_all_categories'])->name('category.index');
-    Route::post('/', [CategoryController::class, 'create_category'])->name('category.create')->middleware('auth:sanctum');
-    Route::get('/{id}', [CategoryController::class, 'get_one_category'])->name('category.show')->middleware('auth:sanctum');
-    Route::put('/{id}', [CategoryController::class, 'update_category'])->name('category.update')->middleware('auth:sanctum');
-    Route::delete('/{id}', [CategoryController::class, 'delete_category'])->name('category.delete')->middleware('auth:sanctum');
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/user', [AdminController::class, 'create_pengguna'])->name('admin.create.pengguna');
+    Route::delete('/user/{id}', [AdminController::class, 'delete_pengguna'])->name('admin.delete.pengguna');
+    Route::get('/user', [AdminController::class, 'get_pengguna'])->name('admin.get.pengguna');
+    Route::get('/user/{id}', [AdminController::class, 'get_pengguna_by_id'])->name('admin.get.pengguna.by.id');
+    Route::put('/user/{id}', [AdminController::class, 'update_pengguna'])->name('admin.update.pengguna');
 });
