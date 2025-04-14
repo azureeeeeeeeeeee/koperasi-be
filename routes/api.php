@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,7 +27,6 @@ Route::prefix('auth')->group(function () {
     Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
 
-
 });
 
 // Admin Routes
@@ -38,5 +38,16 @@ Route::prefix('admin')->group(function () {
     // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
 
+});
 
+// Product Routes
+Route::prefix('product')->group(function () {
+    Route::get('/', [ProductController::class, 'show_all_product'])->name('product.index');
+    Route::get('/{product}', [ProductController::class, 'get_product_data'])->name('product.show');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/', [ProductController::class, 'create_product'])->name('product.store');
+        Route::put('/{product}', [ProductController::class, 'update_product_data'])->name('product.update');
+        Route::delete('/{product}', [ProductController::class, 'remove_product'])->name('product.destroy');
+    });
 });
