@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use OpenApi\Annotations as OA;
 
 /**
@@ -12,21 +14,23 @@ use OpenApi\Annotations as OA;
  *     schema="Product",
  *     type="object",
  *     title="Product",
- *     required={"title", "description", "price", "stock"},
+ *     required={"name", "price", "stock"},
  *     @OA\Property(property="id", type="integer", example=1),
- *     @OA\Property(property="title", type="string", example="Produk A"),
- *     @OA\Property(property="description", type="string", example="Deskripsi produk A"),
+ *     @OA\Property(property="name", type="string", example="Produk A"),
  *     @OA\Property(property="price", type="number", format="float", example=10000),
  *     @OA\Property(property="stock", type="integer", example=15),
+ *     @OA\Property(property="category_id", type="integer", example=2),
+ *     @OA\Property(property="user_id", type="integer", example=5),
  *     @OA\Property(property="created_at", type="string", format="date-time", example="2024-01-01T00:00:00Z"),
  *     @OA\Property(property="updated_at", type="string", format="date-time", example="2024-01-01T00:00:00Z")
  * )
  */
-
 class ProductController extends Controller
 {
     
     /**
+     * GET /api/product
+     * 
      * @OA\Get(
      *     path="/api/product",
      *     summary="Ambil semua produk",
@@ -36,19 +40,18 @@ class ProductController extends Controller
      *         description="Daftar produk berhasil diambil",
      *         @OA\JsonContent(
      *             type="object",
-     *             @OA\Property(property="success", type="boolean"),
-     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Daftar produk berhasil diambil."),
      *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
      *         )
      *     ),
      *     @OA\Response(response=404, description="Tidak ada produk")
      * )
      */
-
     public function show_all_product()
     {
         try {
-            $products = Product::all();
+            $products = Product::with(['category', 'user'])->get();
 
             if ($products->isEmpty()) {
                 return response()->json([
@@ -68,6 +71,8 @@ class ProductController extends Controller
     }
 
     /**
+     * GET /api/product/{id}
+     * 
      * @OA\Get(
      *     path="/api/product/{id}",
      *     summary="Ambil detail produk berdasarkan ID",
@@ -81,16 +86,20 @@ class ProductController extends Controller
      *     @OA\Response(
      *         response=200,
      *         description="Detail produk berhasil diambil",
-     *         @OA\JsonContent(ref="#/components/schemas/Product")
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Detail produk berhasil diambil."),
+     *             @OA\Property(property="data", ref="#/components/schemas/Product")
+     *         )
      *     ),
      *     @OA\Response(response=404, description="Produk tidak ditemukan")
      * )
      */
-
     public function get_product_data($id)
     {
         try {
-            $product = Product::find($id);
+            $product = Product::with(['category', 'user'])->find($id);
 
             if (!$product) {
                 return response()->json([
@@ -110,6 +119,8 @@ class ProductController extends Controller
     }
 
     /**
+     * POST /api/product
+     * 
      * @OA\Post(
      *     path="/api/product",
      *     summary="Buat produk baru",
@@ -118,36 +129,42 @@ class ProductController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"title","description","price","stock"},
-     *             @OA\Property(property="title", type="string"),
-     *             @OA\Property(property="description", type="string"),
-     *             @OA\Property(property="price", type="number", format="float"),
-     *             @OA\Property(property="stock", type="integer")
+     *             required={"name","price","stock","category"},
+     *             @OA\Property(property="name", type="string", example="Produk A"),
+     *             @OA\Property(property="price", type="number", format="float", example=10000),
+     *             @OA\Property(property="stock", type="integer", example=15),
+     *             @OA\Property(property="category", type="string", example="Elektronik")
      *         )
      *     ),
-     *     @OA\Response(response=201, description="Produk telah berhasil dibuat"),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Produk telah berhasil dibuat",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Produk telah berhasil dibuat."),
+     *             @OA\Property(property="data", ref="#/components/schemas/Product")
+     *         )
+     *     )
      * )
      */
     public function create_product(Request $request)
     {
         try {
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
+            Gate::authorize('create', Product::class);
+            $fields = $request->validate([
+                'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
+                'category' => 'required|string|max:30'
             ]);
 
-            $user = $request->user(); 
+            $fields['user_id'] = $request->user()->id;
+            $fields['category_id'] = Category::where('name', $fields['category'])->firstOrFail()->id;
 
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized, please log in.',
-                ], 401);
-            }
+            // unset($fields['category']);
 
-            $product = Product::create($request->all());
+            $product = Product::create($fields);
 
             return response()->json([
                 'success' => true,
@@ -160,6 +177,8 @@ class ProductController extends Controller
     }
 
     /**
+     * PUT /api/product/{id}
+     * 
      * @OA\Put(
      *     path="/api/product/{id}",
      *     summary="Update data produk berdasarkan ID",
@@ -174,30 +193,32 @@ class ProductController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"title","description","price","stock"},
-     *             @OA\Property(property="title", type="string"),
-     *             @OA\Property(property="description", type="string"),
-     *             @OA\Property(property="price", type="number"),
-     *             @OA\Property(property="stock", type="integer")
+     *             required={"name","price","stock","category"},
+     *             @OA\Property(property="name", type="string", example="Produk A"),
+     *             @OA\Property(property="price", type="number", example=10000),
+     *             @OA\Property(property="stock", type="integer", example=15),
+     *             @OA\Property(property="category", type="string", example="Elektronik")
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Data produk telah berhasil diupdate"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Data produk telah berhasil diupdate",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Data produk telah berhasil diupdate."),
+     *             @OA\Property(property="data", ref="#/components/schemas/Product")
+     *         )
+     *     ),
      *     @OA\Response(response=404, description="Produk tidak ditemukan")
      * )
      */
     public function update_product_data(Request $request, $id)
     {
         try {
-            $user = $request->user();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized, please log in.',
-                ], 401);
-            }
-
             $product = Product::find($id);
+
+            Gate::authorize('update', $product);
 
             if (!$product) {
                 return response()->json([
@@ -206,14 +227,17 @@ class ProductController extends Controller
                 ], 404);
             }
 
-            $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'required|string',
+            $fields = $request->validate([
+                'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
+                'category' => 'required|string|min:0',
             ]);
 
-            $product->update($request->all());
+            $fields['user_id'] = $request->user()->id;
+            $fields['category_id'] = Category::where('name', $fields['category'])->firstOrFail()->id;
+
+            $product->update($fields);
 
             return response()->json([
                 'success' => true,
@@ -226,6 +250,8 @@ class ProductController extends Controller
     }
 
     /**
+     * DELETE /api/product/{id}
+     * 
      * @OA\Delete(
      *     path="/api/product/{id}",
      *     summary="Hapus produk berdasarkan ID",
@@ -237,23 +263,24 @@ class ProductController extends Controller
      *         required=true,
      *         @OA\Schema(type="integer")
      *     ),
-     *     @OA\Response(response=200, description="Produk berhasil dihapus"),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Produk berhasil dihapus",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Produk telah berhasil dihapus.")
+     *         )
+     *     ),
      *     @OA\Response(response=404, description="Produk tidak ditemukan")
      * )
      */
     public function remove_product($id)
     {
         try {
-            $user = request()->user();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Unauthorized, please log in.',
-                ], 401);
-            }
-
             $product = Product::find($id);
+
+            Gate::authorize('delete', $product);
 
             if (!$product) {
                 return response()->json([

@@ -53,4 +53,9 @@ class User extends Authenticatable
             'status_keanggotaan' => 'string',
         ];
     }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

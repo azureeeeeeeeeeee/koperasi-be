@@ -244,6 +244,7 @@
                     "Product"
                 ],
                 "summary": "Ambil semua produk",
+                "description": "GET /api/product",
                 "operationId": "0b894c7021b0247c58a86ba4f1c8fc32",
                 "responses": {
                     "200": {
@@ -253,10 +254,12 @@
                                 "schema": {
                                     "properties": {
                                         "success": {
-                                            "type": "boolean"
+                                            "type": "boolean",
+                                            "example": true
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Daftar produk berhasil diambil."
                                         },
                                         "data": {
                                             "type": "array",
@@ -280,6 +283,7 @@
                     "Product"
                 ],
                 "summary": "Buat produk baru",
+                "description": "POST /api/product",
                 "operationId": "5e5e67e64f76db6ad5d411fdf8468b67",
                 "requestBody": {
                     "required": true,
@@ -287,24 +291,28 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "title",
-                                    "description",
+                                    "name",
                                     "price",
-                                    "stock"
+                                    "stock",
+                                    "category"
                                 ],
                                 "properties": {
-                                    "title": {
-                                        "type": "string"
-                                    },
-                                    "description": {
-                                        "type": "string"
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Produk A"
                                     },
                                     "price": {
                                         "type": "number",
-                                        "format": "float"
+                                        "format": "float",
+                                        "example": 10000
                                     },
                                     "stock": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": 15
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "Elektronik"
                                     }
                                 },
                                 "type": "object"
@@ -314,7 +322,27 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Produk telah berhasil dibuat"
+                        "description": "Produk telah berhasil dibuat",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Produk telah berhasil dibuat."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -330,6 +358,7 @@
                     "Product"
                 ],
                 "summary": "Ambil detail produk berdasarkan ID",
+                "description": "GET /api/product/{id}",
                 "operationId": "02b3b7720ebac89459a288692bee11a1",
                 "parameters": [
                     {
@@ -347,7 +376,20 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Product"
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Detail produk berhasil diambil."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -362,6 +404,7 @@
                     "Product"
                 ],
                 "summary": "Update data produk berdasarkan ID",
+                "description": "PUT /api/product/{id}",
                 "operationId": "0a4d4b25b57909039bade6278163711f",
                 "parameters": [
                     {
@@ -379,23 +422,27 @@
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "title",
-                                    "description",
+                                    "name",
                                     "price",
-                                    "stock"
+                                    "stock",
+                                    "category"
                                 ],
                                 "properties": {
-                                    "title": {
-                                        "type": "string"
-                                    },
-                                    "description": {
-                                        "type": "string"
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Produk A"
                                     },
                                     "price": {
-                                        "type": "number"
+                                        "type": "number",
+                                        "example": 10000
                                     },
                                     "stock": {
-                                        "type": "integer"
+                                        "type": "integer",
+                                        "example": 15
+                                    },
+                                    "category": {
+                                        "type": "string",
+                                        "example": "Elektronik"
                                     }
                                 },
                                 "type": "object"
@@ -405,7 +452,27 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Data produk telah berhasil diupdate"
+                        "description": "Data produk telah berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data produk telah berhasil diupdate."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Produk tidak ditemukan"
@@ -422,6 +489,7 @@
                     "Product"
                 ],
                 "summary": "Hapus produk berdasarkan ID",
+                "description": "DELETE /api/product/{id}",
                 "operationId": "e15a526601b29710570fe1d3de3547ba",
                 "parameters": [
                     {
@@ -435,7 +503,24 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Produk berhasil dihapus"
+                        "description": "Produk berhasil dihapus",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Produk telah berhasil dihapus."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Produk tidak ditemukan"
@@ -454,8 +539,7 @@
             "Product": {
                 "title": "Product",
                 "required": [
-                    "title",
-                    "description",
+                    "name",
                     "price",
                     "stock"
                 ],
@@ -464,13 +548,9 @@
                         "type": "integer",
                         "example": 1
                     },
-                    "title": {
+                    "name": {
                         "type": "string",
                         "example": "Produk A"
-                    },
-                    "description": {
-                        "type": "string",
-                        "example": "Deskripsi produk A"
                     },
                     "price": {
                         "type": "number",
@@ -480,6 +560,14 @@
                     "stock": {
                         "type": "integer",
                         "example": 15
+                    },
+                    "category_id": {
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "example": 5
                     },
                     "created_at": {
                         "type": "string",

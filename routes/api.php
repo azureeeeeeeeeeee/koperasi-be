@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -50,4 +51,10 @@ Route::prefix('product')->group(function () {
         Route::put('/{product}', [ProductController::class, 'update_product_data'])->name('product.update');
         Route::delete('/{product}', [ProductController::class, 'remove_product'])->name('product.destroy');
     });
+});
+
+// Category Routes
+Route::prefix('category')->group(function () {
+    Route::get('/', [CategoryController::class, 'get_all_categories'])->name('category.index');
+    Route::post('/', [CategoryController::class, 'create_category'])->name('category.index');
 });
