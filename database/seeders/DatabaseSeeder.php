@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'testuser@gmail.com',
             'password' => Hash::make('test321321321'),
             'tipe' => 'admin',
+            'is_verified' => true,
             'status_keanggotaan' => 'bukan anggota',
         ]);
 
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'pengguna@staff.itk.ac.id',
             'password' => Hash::make('pengguna321321321'),
             'tipe' => 'pengguna',
+            'is_verified' => true,
             'status_keanggotaan' => 'tidak aktif',
         ]);
     }
