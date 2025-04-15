@@ -6,6 +6,9 @@ use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\otpMail;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -42,6 +45,19 @@ class AuthController extends Controller
         }
 
         $token = $user->createToken($user->email)->plainTextToken;
+
+
+        // $otpExists = Otp::where('user_id', $user->id)
+        //     ->where('expires_at', '>', Carbon::now())
+        //     ->exists();
+
+        // if ($otpExists) {
+        //     return response()->json([
+        //         "message" => "OTP belum diverifikasi. Silakan verifikasi OTP terlebih dahulu.",
+        //         "redirect" => route('auth.verifyOtpPage')
+        //     ], 403);
+        // }
+
         $data = [
             "message" => "Login Berhasil"
         ];
@@ -88,6 +104,23 @@ class AuthController extends Controller
 
         $user->tipe = 'penitip';
         $user->save();
+        $otp = random_int(100000, 999999);
+        
+    
+        // Store OTP in the database
+        $otpCode = Otp::create([
+            'user_id' => $user->id,
+            'otp' => $otp,
+            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 6 minutes
+        ]);
+
+        try {
+            // Kirim email OTP
+            Mail::to($user->email)->send(new OtpMail($otp));
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send OTP email'.$e->getMessage()], 500);
+        }
 
         $data = [
             'message' => 'User berhasil register'
@@ -138,15 +171,20 @@ class AuthController extends Controller
         $otpCode = Otp::create([
             'user_id' => $user->id,
             'otp' => $otp,
-            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 5 minutes
+            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 6 minutes
         ]);
 
-                  // Kirim email OTP
-            Mail::to($user->email)->send(new OtpMail($otpCode));
+        try {
+            // Kirim email OTP
+            Mail::to($user->email)->send(new OtpMail($otp));
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP email: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send OTP email'.$e->getMessage()], 500);
+        }
 
-            $data = [
-        'message' => 'User berhasil register, OTP telah dikirim ke email Anda'
-    ];
+        $data = [
+            'message' => 'User berhasil register, OTP telah dikirim ke email Anda'
+        ];
         return response()->json($data, 201);
     }
 
@@ -204,29 +242,37 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
             'otp' => 'required|string',
         ]);
-    
-        $user = User::where('email', $request->email)->first();
-    
+
+        $user = $request->user(); // Get the authenticated user from the token
+
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
-    
+
         $otp = Otp::where('user_id', $user->id)
             ->where('otp', $request->otp)
             ->where('expires_at', '>', Carbon::now())
-            ->first();        
-    
+            ->first();
+
         if (!$otp) {
             return response()->json(['message' => 'Invalid or expired OTP'], 400);
         }
-    
-        // OTP is valid, delete it
+
+        // OTP is valid, delete it and update the user's is_verified field
         $otp->delete();
-    
+        $user->is_verified = true;
+        $user->save();
+
         return response()->json(['message' => 'OTP verified successfully']);
+    }
+
+    public function verifyOtpPage()
+    {
+        return response()->json([
+            "message" => "Redirect to OTP verification page."
+        ]);
     }
     
 }

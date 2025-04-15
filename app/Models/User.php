@@ -51,6 +51,7 @@ class User extends Authenticatable
             'saldo' => 'float',
             'tipe' => 'string',
             'status_keanggotaan' => 'string',
+            'is_verified' => 'boolean',
         ];
     }
 }

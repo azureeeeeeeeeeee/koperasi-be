@@ -39,9 +39,9 @@ class otpMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.otp', // Pastikan buat file blade template ini
+            view: 'emails.otp',
             with: [
-                'otpCode' => $this->otpCode,
+                'otpCode' => $this->otpCode, // Pastikan otpCode dikirim ke template
             ],
         );
     }

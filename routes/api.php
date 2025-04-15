@@ -18,15 +18,14 @@ Route::get('', function () {
 
 
 // Authentication Routes
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('api')->group(function () {
     Route::post('/register/penitip', [AuthController::class, 'register_penitip'])->name('auth.register.penitip');
     Route::post('/register/pengguna', [AuthController::class, 'register_pengguna'])->name('auth.register.pengguna');
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
     Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
-
-
+Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
 });
 
 // Admin Routes
@@ -37,6 +36,4 @@ Route::prefix('admin')->group(function () {
     // Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
     // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
-
-
 });
