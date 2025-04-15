@@ -6,6 +6,10 @@ use Carbon\Carbon;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\otpMail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -41,7 +45,39 @@ class AuthController extends Controller
             ], 404);
         }
 
+        // Check if user is verified
+        if (!$user->is_verified) {
+            // Check if there's a valid OTP
+            $existingOtp = Otp::where('user_id', $user->id)
+                ->where('expires_at', '>', Carbon::now())
+                ->first();
+
+            if (!$existingOtp) {
+                // Generate new verification token if no valid OTP exists
+                $verificationToken = Str::uuid();
+                
+                Otp::create([
+                    'user_id' => $user->id,
+                    'otp' => $verificationToken,
+                    'expires_at' => Carbon::now()->addHours(24),
+                ]);
+                
+                try {
+                    // Send verification email
+                    Mail::to($user->email)->send(new OtpMail($verificationToken));
+                } catch (\Exception $e) {
+                    Log::error('Failed to send verification email: ' . $e->getMessage());
+                }
+            }
+            
+            return response()->json([
+                "message" => "Akun belum diverifikasi. Link verifikasi telah dikirim ke email Anda.",
+                "redirect" => route('auth.verifyOtpPage')
+            ], 403);
+        }
+
         $token = $user->createToken($user->email)->plainTextToken;
+
         $data = [
             "message" => "Login Berhasil"
         ];
@@ -88,9 +124,27 @@ class AuthController extends Controller
 
         $user->tipe = 'penitip';
         $user->save();
+        
+        // Generate UUID for verification
+        $verificationToken = Str::uuid();
+    
+        // Store token in the database
+        $otpCode = Otp::create([
+            'user_id' => $user->id,
+            'otp' => $verificationToken,
+            'expires_at' => Carbon::now()->addHours(24), // Link valid for 24 hours
+        ]);
+
+        try {
+            // Send verification email
+            Mail::to($user->email)->send(new OtpMail($verificationToken));
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send verification email: '.$e->getMessage()], 500);
+        }
 
         $data = [
-            'message' => 'User berhasil register'
+            'message' => 'User berhasil register. Silakan periksa email Anda untuk verifikasi.'
         ];
 
         return response()->json($data, 201);
@@ -131,22 +185,27 @@ class AuthController extends Controller
 
         $user = User::create($fields);
 
-        $otp = random_int(100000, 999999);
-        
+        // Generate UUID for verification
+        $verificationToken = Str::uuid();
     
-        // Store OTP in the database
+        // Store token in the database
         $otpCode = Otp::create([
             'user_id' => $user->id,
-            'otp' => $otp,
-            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 5 minutes
+            'otp' => $verificationToken,
+            'expires_at' => Carbon::now()->addHours(24), // Link valid for 24 hours
         ]);
 
-                  // Kirim email OTP
-            Mail::to($user->email)->send(new OtpMail($otpCode));
+        try {
+            // Send verification email
+            Mail::to($user->email)->send(new OtpMail($verificationToken));
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email: ' . $e->getMessage());
+            return response()->json(['message' => 'Failed to send verification email: '.$e->getMessage()], 500);
+        }
 
-            $data = [
-        'message' => 'User berhasil register, OTP telah dikirim ke email Anda'
-    ];
+        $data = [
+            'message' => 'User berhasil register. Silakan periksa email Anda untuk verifikasi.'
+        ];
         return response()->json($data, 201);
     }
 
@@ -175,58 +234,102 @@ class AuthController extends Controller
         );
     }
 
-    public function sendOtp(Request $request)
-    {
-        $request->validate(['email' => 'required|email']);
+    // public function sendOtp(Request $request)
+    // {
+    //     $request->validate(['email' => 'required|email']);
     
-        $user = User::where('email', $request->email)->first();
+    //     $user = User::where('email', $request->email)->first();
     
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
-        }
+    //     if (!$user) {
+    //         return response()->json(['message' => 'User not found'], 404);
+    //     }
     
-        // Generate a 6-digit OTP
-        $otpCode = random_int(100000, 999999);
+    //     // Generate UUID for verification
+    //     $verificationToken = Str::uuid();
     
-        // Store OTP in the database
-        Otp::create([
-            'user_id' => $user->id,
-            'otp' => $otpCode,
-            'expires_at' => Carbon::now()->addMinutes(6), // OTP valid for 5 minutes
-        ]);
+    //     // Delete any existing tokens for this user
+    //     Otp::where('user_id', $user->id)->delete();
+        
+    //     // Store token in the database
+    //     Otp::create([
+    //         'user_id' => $user->id,
+    //         'otp' => $verificationToken,
+    //         'expires_at' => Carbon::now()->addHours(24), // Link valid for 24 hours
+    //     ]);
     
-        // Send OTP via email or SMS (use Laravel Notifications or a mail service)
-        // Example: Mail::to($user->email)->send(new OtpMail($otpCode));
-    
-        return response()->json(['message' => 'OTP sent successfully']);
-    }
+    //     try {
+    //         // Send verification email
+    //         Mail::to($user->email)->send(new OtpMail($verificationToken));
+    //         return response()->json(['message' => 'Verification link sent successfully']);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to send verification email: ' . $e->getMessage());
+    //         return response()->json(['message' => 'Failed to send verification email: '.$e->getMessage()], 500);
+    //     }
+    // }
     
     public function verifyOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
             'otp' => 'required|string',
         ]);
-    
-        $user = User::where('email', $request->email)->first();
-    
+
+        $user = $request->user(); // Get the authenticated user from the token
+
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
-    
+
         $otp = Otp::where('user_id', $user->id)
             ->where('otp', $request->otp)
             ->where('expires_at', '>', Carbon::now())
-            ->first();        
-    
+            ->first();
+
         if (!$otp) {
-            return response()->json(['message' => 'Invalid or expired OTP'], 400);
+            return response()->json(['message' => 'Invalid or expired verification link'], 400);
         }
-    
-        // OTP is valid, delete it
+
+        // Token is valid, delete it and update the user's is_verified field
         $otp->delete();
-    
-        return response()->json(['message' => 'OTP verified successfully']);
+        $user->is_verified = true;
+        $user->save();
+
+        return response()->json(['message' => 'Email verification successful']);
+    }
+
+    /**
+     * Handle verification link click
+     */
+    public function verifyEmail(Request $request, $token)
+    {
+        $otp = Otp::where('otp', $token)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+
+        if (!$otp) {
+            return response()->json(['message' => 'Invalid or expired verification link'], 400);
+        }
+
+        $user = User::find($otp->user_id);
+        
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        // Token is valid, verify the user
+        $user->is_verified = true;
+        $user->save();
+        
+        // Delete the token
+        $otp->delete();
+
+        return response()->json(['message' => 'Email verification successful']);
+    }
+
+    public function verifyOtpPage()
+    {
+        return response()->json([
+            "message" => "Redirect to OTP verification page."
+        ]);
     }
     
 }
