@@ -4,14 +4,14 @@
     <title>Kode OTP</title>
 </head>
 <body>
-    <h2>Kode OTP Anda</h2>
-    <p>Gunakan kode berikut untuk verifikasi:</p>
+    <h2>Link verifikasi Anda</h2>
+    <p>Klik Link berikut untuk verifikasi:</p>
     
     <div style="font-size: 24px; font-weight: bold; margin: 20px 0;">
-        {{ $otpCode ?? 'Kode tidak tersedia' }}
+        {{ $verificationUrl ?? 'URL tidak tersedia' }}
     </div>
     
-    <p>Kode ini akan kadaluarsa dalam 5 menit.</p>
+    <p>Kode ini akan kadaluarsa dalam 24 Jam.</p>
     
     <footer>
         Terima kasih,<br>

@@ -25,7 +25,9 @@ Route::prefix('auth')->middleware('api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
     Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
-Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
+    Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
+    // New route for verification link
+    Route::get('/verify/{token}', [AuthController::class, 'verifyEmail'])->name('auth.verifyEmail');
 });
 
 // Admin Routes
