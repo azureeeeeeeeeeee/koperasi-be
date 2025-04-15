@@ -28,8 +28,6 @@ Route::prefix('auth')->middleware('api')->group(function () {
     Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
     Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
-    // New route for verification link
-    Route::get('/verify/{token}', [AuthController::class, 'verifyEmail'])->name('auth.verifyEmail');
 });
 
 // Admin Routes
@@ -40,4 +38,22 @@ Route::prefix('admin')->group(function () {
     // Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
     // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
     // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
+});
+
+// Category Routes
+Route::prefix('category')->group(function () {
+    Route::post('/', [CategoryController::class, 'create_category'])->name('category.create')->middleware('auth:sanctum');
+    Route::get('/', [CategoryController::class, 'get_all_categories'])->name('category.all');
+    Route::get('/{id}', [CategoryController::class, 'get_one_category'])->name('category.single')->middleware('auth:sanctum');
+    Route::put('/{id}', [CategoryController::class, 'update_category'])->name('category.update')->middleware('auth:sanctum');
+    Route::delete('/{id}', [CategoryController::class, 'delete_category'])->name('category.delete')->middleware('auth:sanctum');
+});
+
+// Product Routes
+Route::prefix('product')->group(function () {
+    Route::get('/', [ProductController::class, 'show_all_product'])->name('product.all');
+    Route::get('/{id}', [ProductController::class, 'get_product_data'])->name('product.single');
+    Route::post('/', [ProductController::class, 'create_product'])->name('product.create')->middleware('auth:sanctum');
+    Route::put('/{id}', [ProductController::class, 'update_product_data'])->name('product.update')->middleware('auth:sanctum');
+    Route::delete('/{id}', [ProductController::class, 'remove_product'])->name('product.delete')->middleware('auth:sanctum');
 });
