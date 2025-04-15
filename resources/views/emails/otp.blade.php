@@ -8,7 +8,7 @@
     <p>Gunakan kode berikut untuk verifikasi:</p>
     
     <div style="font-size: 24px; font-weight: bold; margin: 20px 0;">
-        {{ $otpCode }}
+        {{ $otpCode ?? 'Kode tidak tersedia' }}
     </div>
     
     <p>Kode ini akan kadaluarsa dalam 5 menit.</p>
