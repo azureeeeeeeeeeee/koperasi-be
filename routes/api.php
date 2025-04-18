@@ -63,5 +63,6 @@ Route::prefix('product')->group(function () {
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
     Route::post('/{id_user}/product/{id_product}', [CartController::class, 'add_item_to_cart'])->name('cart.add_item');
+    Route::delete('/{id_user}/product/{id_product}', [CartController::class, 'destroy'])->name('cart.add_item');
 });
 

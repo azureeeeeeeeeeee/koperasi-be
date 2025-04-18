@@ -100,8 +100,43 @@ class CartController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Cart $cart)
+    public function destroy(Request $request, int $id_user, int $id_product)
     {
-        //
+        $product = Product::with(['category'])->find($id_product);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        $cart = Cart::where('user_id', $id_user)
+                ->where('sudah_bayar', false)
+                ->firstOrFail();
+
+        $existing = $cart->products()->where('product_id', $id_product)->first();
+
+        if (!$existing) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan dalam cart ini'
+            ], 404);
+        }
+        $cart->products()->detach($id_product);
+        $cart->load('products');
+
+        $total = 0;
+        foreach ($cart->products as $item) {
+            if ($item->id != $id_product) {
+                $total += $item->price * $item->pivot->jumlah;
+            }
+        }
+
+        $cart->total_harga = $total;
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Produk berhasil dihapus dari cart',
+            'cart' => $cart->load('products.category')
+        ]);
     }
 }
