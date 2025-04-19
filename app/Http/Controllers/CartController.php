@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Type\Integer;
 
 class CartController extends Controller
@@ -16,6 +18,8 @@ class CartController extends Controller
      */
     public function index()
     {
+        Log::info('Current user:', ['user' => Auth::user()]);
+        Gate::authorize('viewAny', Cart::class);
         $carts = Cart::all();
 
         $data = [
@@ -31,6 +35,12 @@ class CartController extends Controller
      */
     public function add_item_to_cart(Request $request, int $id_user, int $id_product)
     {
+        $cart = Cart::firstOrCreate(
+            ['user_id' => $id_user, 'sudah_bayar' => false],
+        );
+
+        Gate::authorize('create', $cart);
+
         $fields = $request->validate([
             'jumlah' => 'required|integer|min:1',
         ]);
@@ -49,9 +59,6 @@ class CartController extends Controller
             ], 404);
         }
 
-        $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
-        );
 
         $existing = $cart->products()->where('product_id', $id_product)->first();
 
@@ -89,6 +96,8 @@ class CartController extends Controller
             ['user_id' => $id_user, 'sudah_bayar' => false],
         );
 
+        Gate::authorize('view', $cart);
+
         $cart->load('products.category');
 
         $items = $cart->products->map(function ($product) {
@@ -115,6 +124,12 @@ class CartController extends Controller
      */
     public function update(Request $request, int $id_user, int $id_product)
     {
+        $cart = Cart::firstOrCreate(
+            ['user_id' => $id_user, 'sudah_bayar' => false],
+        );
+
+        Gate::authorize('update', $cart);
+
         $fields = $request->validate([
             'jumlah' => 'required|integer|min:1',
         ]);
@@ -133,9 +148,7 @@ class CartController extends Controller
             ], 404);
         }
 
-        $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
-        );
+        
 
         $existing = $cart->products()->where('product_id', $id_product)->first();
 
@@ -168,6 +181,11 @@ class CartController extends Controller
      */
     public function destroy(Request $request, int $id_user, int $id_product)
     {
+
+        $cart = Cart::firstOrCreate(
+            ['user_id' => $id_user, 'sudah_bayar' => false],
+        );
+        Gate::authorize('delete', $cart);
         $product = Product::with(['category'])->find($id_product);
 
         if (!$product) {
