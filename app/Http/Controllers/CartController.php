@@ -11,10 +11,40 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\Type\Integer;
 
+
+
+/**
+ * @OA\Schema(
+ *     schema="Cart",
+ *     type="object",
+ *     properties={
+ *         @OA\Property(property="id", type="integer", example=1),
+ *         @OA\Property(property="user_id", type="integer", example=1),
+ *         @OA\Property(property="total_harga", type="number", format="float", example=20000),
+ *         @OA\Property(property="sudah_bayar", type="boolean", example=false),
+ *         @OA\Property(property="created_at", type="string", format="date-time", example="2025-04-20T12:00:00Z"),
+ *         @OA\Property(property="updated_at", type="string", format="date-time", example="2025-04-20T12:00:00Z")
+ *     }
+ * )
+ */
 class CartController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     *     path="/api/cart",
+     *     summary="Get all carts (admin only)",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Success",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Cart"))
+     *         )
+     *     ),
+     *     @OA\Response(response=403, description="Forbidden")
+     * )
      */
     public function index()
     {
@@ -31,8 +61,41 @@ class CartController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     */
+     * @OA\Post(
+     *     path="/api/cart/{id_user}/product/{id_product}",
+     *     summary="Add item to cart",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="product",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"jumlah"},
+     *             @OA\Property(property="jumlah", type="integer", example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product added to cart",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart", ref="#/components/schemas/Cart")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found or stock not enough"),
+     * )
+ */
     public function add_item_to_cart(Request $request, int $id_user, int $id_product)
     {
         $cart = Cart::firstOrCreate(
@@ -88,7 +151,34 @@ class CartController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * @OA\Get(
+     *     path="/api/cart/{id_user}",
+     *     summary="Get active cart for user",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cart fetched successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="cart_id", type="integer"),
+     *             @OA\Property(property="total_harga", type="integer"),
+     *             @OA\Property(property="items", type="array", @OA\Items(
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="name", type="string"),
+     *                 @OA\Property(property="category", type="string"),
+     *                 @OA\Property(property="price", type="integer"),
+     *                 @OA\Property(property="jumlah", type="integer"),
+     *                 @OA\Property(property="subtotal", type="integer"),
+     *             ))
+     *         )
+     *     )
+     * )
      */
     public function show(Request $requesst, int $id_user)
     {
@@ -120,7 +210,39 @@ class CartController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * @OA\Put(
+     *     path="/api/cart/{id_user}/product/{id_product}",
+     *     summary="Update quantity of a product in cart",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="product",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"jumlah"},
+     *             @OA\Property(property="jumlah", type="integer", example=3)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product quantity updated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart", ref="#/components/schemas/Cart")
+     *         )
+     *     )
+     * )
      */
     public function update(Request $request, int $id_user, int $id_product)
     {
@@ -177,7 +299,33 @@ class CartController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * @OA\Delete(
+     *     path="/api/cart/{id_user}/product/{id_product}",
+     *     summary="Remove product from cart",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="user",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="product",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product removed from cart",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart", ref="#/components/schemas/Cart")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found")
+     * )
      */
     public function destroy(Request $request, int $id_user, int $id_product)
     {

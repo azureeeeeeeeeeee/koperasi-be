@@ -23,6 +23,10 @@ namespace App\Http\Controllers;
  *     name="Category",
  *     description="API endpoints to handle Category"
  * )
+ * @OA\Tag(
+ *     name="Cart",
+ *     description="API endpoints to handle Cart"
+ * )
  */
 abstract class Controller
 {
