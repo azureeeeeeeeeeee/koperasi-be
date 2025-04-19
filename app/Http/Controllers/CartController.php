@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Ramsey\Uuid\Type\Integer;
 
 class CartController extends Controller
@@ -77,24 +78,89 @@ class CartController extends Controller
             'message' => 'Product added to cart',
             'cart' => $cart->load('products.category')
         ]);
-
-
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Cart $cart)
+    public function show(Request $requesst, int $id_user)
     {
-        //
+        $cart = Cart::firstOrCreate(
+            ['user_id' => $id_user, 'sudah_bayar' => false],
+        );
+
+        $cart->load('products.category');
+
+        $items = $cart->products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'category' => $product->category->name ?? null,
+                'price' => $product->price,
+                'jumlah' => $product->pivot->jumlah,
+                'subtotal' => $product->price * $product->pivot->jumlah
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Cart fetched successfully',
+            'cart_id' => $cart->id,
+            'total_harga' => $cart->total_harga,
+            'items' => $items,
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Cart $cart)
+    public function update(Request $request, int $id_user, int $id_product)
     {
-        //
+        $fields = $request->validate([
+            'jumlah' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::with(['category'])->find($id_product);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        if ($product->stock - $fields['jumlah'] < 0) {
+            return response()->json([
+                'message' => 'Stok produk tidak cukup'
+            ], 404);
+        }
+
+        $cart = Cart::firstOrCreate(
+            ['user_id' => $id_user, 'sudah_bayar' => false],
+        );
+
+        $existing = $cart->products()->where('product_id', $id_product)->first();
+
+        if ($existing) {
+            $cart->products()->updateExistingPivot($id_product, [
+                'jumlah' => $fields['jumlah']
+            ]);
+        } else {
+            return response()->json([
+                'message' => 'Produk tidak ada dalam keranjang'
+            ]);
+        }
+
+        $total = 0;
+        foreach ($cart->products as $item) {
+            $total += $item->price * $item->pivot->jumlah;
+        }
+
+        $cart->total_harga = $total;
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Product added to cart',
+            'cart' => $cart->load('products.category')
+        ]);
     }
 
     /**
