@@ -100,6 +100,7 @@ class ProductController extends Controller
     {
         try {
             $product = Product::with(['category', 'user'])->find($id);
+            
 
             if (!$product) {
                 return response()->json([
@@ -295,6 +296,48 @@ class ProductController extends Controller
                 'success' => true,
                 'message' => 'Produk telah berhasil dihapus.',
             ], 200);
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
+    public function index(Request $request)
+    {
+        try {
+            $query = Product::with(['category', 'user']);
+
+            if ($request->filled('name')) {
+                $searchName = trim(str_replace('-', ' ', $request->input('name')));
+                $query->where(function($q) use ($searchName) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchName) . '%'])
+                    ->orWhereRaw('LOWER(REPLACE(name, " ", "-")) LIKE ?', ['%' . strtolower(str_replace(' ', '-', $searchName)) . '%']);
+                });
+            }
+
+            if ($request->filled('category')) {
+                $searchCategory = trim(str_replace('-', ' ', $request->input('category')));
+                $query->whereHas('category', function($q) use ($searchCategory) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchCategory) . '%'])
+                    ->orWhereRaw('LOWER(REPLACE(name, " ", "-")) LIKE ?', ['%' . strtolower(str_replace(' ', '-', $searchCategory)) . '%']);
+                });
+            }
+
+            $products = $query->get()->map(function ($product) {
+                $discount = $product->category->potongan ?? 0;
+                $finalPrice = $product->price + ($product->price * ($discount / 100));
+                
+                $product->final_price = $finalPrice;
+                return $product;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => $request->anyFilled(['name', 'category'])
+                    ? 'Hasil pencarian produk'
+                    : 'Daftar semua produk',
+                'data' => $products
+            ]);
+
         } catch (\Exception $e) {
             return $this->handleException($e);
         }

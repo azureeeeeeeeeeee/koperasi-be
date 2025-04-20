@@ -55,7 +55,8 @@ Route::prefix('category')->group(function () {
 // Product Routes
 Route::prefix('product')->group(function () {
     Route::get('/', [ProductController::class, 'show_all_product'])->name('product.all');
-    Route::get('/{id}', [ProductController::class, 'get_product_data'])->name('product.single');
+    Route::get('/{id}', [ProductController::class, 'get_product_data'])->name('product.single')->whereNumber('id');
+    Route::get('/search', [ProductController::class, 'index'])->name('product.index');
     Route::post('/', [ProductController::class, 'create_product'])->name('product.create')->middleware('auth:sanctum');
     Route::put('/{id}', [ProductController::class, 'update_product_data'])->name('product.update')->middleware('auth:sanctum');
     Route::delete('/{id}', [ProductController::class, 'remove_product'])->name('product.delete')->middleware('auth:sanctum');
