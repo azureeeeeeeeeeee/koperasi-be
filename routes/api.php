@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\PaymentGatewayController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,4 +38,11 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function ()
     Route::get('/user', [AdminController::class, 'get_pengguna'])->name('admin.get.pengguna');
     Route::get('/user/{id}', [AdminController::class, 'get_pengguna_by_id'])->name('admin.get.pengguna.by.id');
     Route::put('/user/{id}', [AdminController::class, 'update_pengguna'])->name('admin.update.pengguna');
+});
+
+// Payment Gateway Routes
+Route::prefix('payment')->group(function () {
+    Route::post('/create', [PaymentGatewayController::class, 'createPayment']);
+    Route::post('/test', [PaymentGatewayController::class, 'testMidtrans']);
+    Route::get('/status', [PaymentGatewayController::class, 'checkPaymentStatus']);
 });
