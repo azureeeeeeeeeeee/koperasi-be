@@ -79,7 +79,8 @@ class AuthController extends Controller
         $token = $user->createToken($user->email)->plainTextToken;
 
         $data = [
-            "message" => "Login Berhasil"
+            "message" => "Login Berhasil",
+            "token" => $token,
         ];
 
         return response()->json($data, 200)->cookie(

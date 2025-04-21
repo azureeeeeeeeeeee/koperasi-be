@@ -371,4 +371,183 @@ class CartController extends Controller
             'cart' => $cart->load('products.category')
         ]);
     }
+
+    public function guest_show(Request $requesst, string $guest_id)
+    {
+        $cart = Cart::firstOrCreate(
+            ['guest_id' => $guest_id, 'sudah_bayar' => false],
+        );
+
+        $cart->load('products.category');
+
+        $items = $cart->products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'category' => $product->category->name ?? null,
+                'price' => $product->price,
+                'jumlah' => $product->pivot->jumlah,
+                'subtotal' => $product->price * $product->pivot->jumlah
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Cart fetched successfully',
+            'cart_id' => $cart->id,
+            'total_harga' => $cart->total_harga,
+            'items' => $items,
+        ]);
+    }
+
+    public function guest_add_item(Request $request, string $guest_id, int $id_product)
+    {
+        $cart = Cart::firstOrCreate(
+            ['guest_id' => $guest_id, 'sudah_bayar' => false],
+        );
+
+        $fields = $request->validate([
+            'jumlah' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::with(['category'])->find($id_product);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        if ($product->stock - $fields['jumlah'] < 0) {
+            return response()->json([
+                'message' => 'Stok produk tidak cukup'
+            ], 404);
+        }
+
+        $existing = $cart->products()->where('product_id', $id_product)->first();
+
+        if ($existing) {
+            $newQuantity = $existing->pivot->jumlah + $fields['jumlah'];
+            $cart->products()->updateExistingPivot($id_product, [
+                'jumlah' => $newQuantity
+            ]);
+        } else {
+            $cart->products()->attach($id_product, [
+                'jumlah' => $fields['jumlah']
+            ]);
+        }
+
+        $total = 0;
+        foreach ($cart->products as $item) {
+            $total += $item->price * $item->pivot->jumlah;
+        }
+
+        $cart->total_harga = $total;
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Product added to cart',
+            'cart' => $cart->load('products.category')
+        ], 200);
+    }
+
+    public function guest_update_item(Request $request, string $guest_id, int $id_product)
+    {
+        $fields = $request->validate([
+            'jumlah' => 'required|integer|min:1',
+        ]);
+
+        $product = Product::with(['category'])->find($id_product);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        if ($product->stock - $fields['jumlah'] < 0) {
+            return response()->json([
+                'message' => 'Not enough stock'
+            ], 400);
+        }
+
+        $cart = Cart::where('guest_id', $guest_id)
+                    ->where('sudah_bayar', false)
+                    ->first();
+
+        if (!$cart) {
+            return response()->json([
+                'message' => 'Cart not found for this guest'
+            ], 404);
+        }
+
+        $existing = $cart->products()->where('product_id', $id_product)->first();
+
+        if (!$existing) {
+            return response()->json([
+                'message' => 'Product not found in cart'
+            ], 404);
+        }
+
+        $cart->products()->updateExistingPivot($id_product, [
+            'jumlah' => $fields['jumlah']
+        ]);
+
+        $total = 0;
+        foreach ($cart->products as $item) {
+            $total += $item->price * $item->pivot->jumlah;
+        }
+
+        $cart->total_harga = $total;
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Product quantity updated in cart',
+            'cart' => $cart->load('products.category')
+        ], 200);
+    }
+
+    public function guest_remove_item(Request $request, string $guest_id, int $id_product)
+    {
+        $product = Product::with(['category'])->find($id_product);
+
+        if (!$product) {
+            return response()->json([
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        $cart = Cart::where('guest_id', $guest_id)
+                    ->where('sudah_bayar', false)
+                    ->first();
+
+        if (!$cart) {
+            return response()->json([
+                'message' => 'Cart not found for this guest'
+            ], 404);
+        }
+
+        $existing = $cart->products()->where('product_id', $id_product)->first();
+
+        if (!$existing) {
+            return response()->json([
+                'message' => 'Product not found in cart'
+            ], 404);
+        }
+
+        $cart->products()->detach($id_product);
+
+        $total = 0;
+        foreach ($cart->products as $item) {
+            $total += $item->price * $item->pivot->jumlah;
+        }
+
+        // Update the cart total price
+        $cart->total_harga = $total;
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Product removed from cart',
+            'cart' => $cart->load('products.category')
+        ], 200);
+    }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -32,6 +34,19 @@ class DatabaseSeeder extends Seeder
             'tipe' => 'pengguna',
             'is_verified' => true,
             'status_keanggotaan' => 'tidak aktif',
+        ]);
+
+        Category::create([
+            'name' => 'makanan berat',
+            'potongan' => 10.00,
+        ]);
+
+        Product::create([
+            'name' => 'Mie gambus',
+            'price' => 8000,
+            'stock' => 10,
+            'category_id' => 1,
+            'user_id' => 1,
         ]);
     }
 }

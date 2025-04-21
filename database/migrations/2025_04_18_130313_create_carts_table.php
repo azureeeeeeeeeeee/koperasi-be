@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
 
+            $table->string('guest_id')->nullable()->unique();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->decimal('total_harga')->default(0);
             $table->boolean('sudah_bayar')->default(false);
