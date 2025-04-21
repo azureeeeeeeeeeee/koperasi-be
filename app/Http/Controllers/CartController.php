@@ -381,6 +381,47 @@ class CartController extends Controller
         ]);
     }
 
+
+
+
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/cart/guest/{guest_id}",
+     *     summary="Get cart for guest user",
+     *     tags={"Cart"},
+     *     @OA\Parameter(
+     *         name="guest_id",
+     *         in="path",
+     *         required=true,
+     *         description="Guest user identifier",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cart fetched successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart_id", type="integer"),
+     *             @OA\Property(property="total_harga", type="number", format="float"),
+     *             @OA\Property(
+     *                 property="items",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="name", type="string"),
+     *                     @OA\Property(property="category", type="string"),
+     *                     @OA\Property(property="price", type="number", format="float"),
+     *                     @OA\Property(property="jumlah", type="integer"),
+     *                     @OA\Property(property="subtotal", type="number", format="float")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function guest_show(Request $requesst, string $guest_id)
     {
         $cart = Cart::firstOrCreate(
@@ -408,6 +449,49 @@ class CartController extends Controller
         ]);
     }
 
+
+
+
+
+
+
+    /**
+     * @OA\Post(
+     *     path="/api/cart/guest/{guest_id}/add/{id_product}",
+     *     summary="Add product to guest cart",
+     *     tags={"Cart"},
+     *     @OA\Parameter(
+     *         name="guest_id",
+     *         in="path",
+     *         required=true,
+     *         description="Guest user identifier",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="id_product",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"jumlah"},
+     *             @OA\Property(property="jumlah", type="integer", example=2)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product added to cart",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product not found / Stock not enough")
+     * )
+     */
     public function guest_add_item(Request $request, string $guest_id, int $id_product)
     {
         $cart = Cart::firstOrCreate(
@@ -462,6 +546,46 @@ class CartController extends Controller
         ], 200);
     }
 
+
+
+    /**
+     * @OA\Put(
+     *     path="/api/cart/guest/{guest_id}/update/{id_product}",
+     *     summary="Update product quantity in guest cart",
+     *     tags={"Cart"},
+     *     @OA\Parameter(
+     *         name="guest_id",
+     *         in="path",
+     *         required=true,
+     *         description="Guest user identifier",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="id_product",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"jumlah"},
+     *             @OA\Property(property="jumlah", type="integer", example=3)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product quantity updated in cart",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product or Cart not found"),
+     *     @OA\Response(response=400, description="Not enough stock")
+     * )
+     */
     public function guest_update_item(Request $request, string $guest_id, int $id_product)
     {
         $fields = $request->validate([
@@ -521,6 +645,41 @@ class CartController extends Controller
         ], 200);
     }
 
+
+
+
+
+
+    /**
+     * @OA\Delete(
+     *     path="/api/cart/guest/{guest_id}/remove/{id_product}",
+     *     summary="Remove product from guest cart",
+     *     tags={"Cart"},
+     *     @OA\Parameter(
+     *         name="guest_id",
+     *         in="path",
+     *         required=true,
+     *         description="Guest user identifier",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="id_product",
+     *         in="path",
+     *         required=true,
+     *         description="Product ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Product removed from cart",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="cart", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Product or Cart not found")
+     * )
+     */
     public function guest_remove_item(Request $request, string $guest_id, int $id_product)
     {
         $product = Product::with(['category'])->find($id_product);

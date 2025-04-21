@@ -872,6 +872,275 @@
                 ]
             }
         },
+        "/api/cart/guest/{guest_id}": {
+            "get": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Get cart for guest user",
+                "operationId": "cf8f63ab505b02d9e9890f91d2327920",
+                "parameters": [
+                    {
+                        "name": "guest_id",
+                        "in": "path",
+                        "description": "Guest user identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cart fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "cart_id": {
+                                            "type": "integer"
+                                        },
+                                        "total_harga": {
+                                            "type": "number",
+                                            "format": "float"
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    },
+                                                    "category": {
+                                                        "type": "string"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "jumlah": {
+                                                        "type": "integer"
+                                                    },
+                                                    "subtotal": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/cart/guest/{guest_id}/add/{id_product}": {
+            "post": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Add product to guest cart",
+                "operationId": "293f292ab02499999ed31087d2a29a69",
+                "parameters": [
+                    {
+                        "name": "guest_id",
+                        "in": "path",
+                        "description": "Guest user identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id_product",
+                        "in": "path",
+                        "description": "Product ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "jumlah"
+                                ],
+                                "properties": {
+                                    "jumlah": {
+                                        "type": "integer",
+                                        "example": 2
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product added to cart",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "cart": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found / Stock not enough"
+                    }
+                }
+            }
+        },
+        "/api/cart/guest/{guest_id}/update/{id_product}": {
+            "put": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Update product quantity in guest cart",
+                "operationId": "7b4cc72c98ca561c53d12f5ebd33eb90",
+                "parameters": [
+                    {
+                        "name": "guest_id",
+                        "in": "path",
+                        "description": "Guest user identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id_product",
+                        "in": "path",
+                        "description": "Product ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "jumlah"
+                                ],
+                                "properties": {
+                                    "jumlah": {
+                                        "type": "integer",
+                                        "example": 3
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product quantity updated in cart",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "cart": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product or Cart not found"
+                    },
+                    "400": {
+                        "description": "Not enough stock"
+                    }
+                }
+            }
+        },
+        "/api/cart/guest/{guest_id}/remove/{id_product}": {
+            "delete": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Remove product from guest cart",
+                "operationId": "0c57e426946d314ba341bcdc773c1e9e",
+                "parameters": [
+                    {
+                        "name": "guest_id",
+                        "in": "path",
+                        "description": "Guest user identifier",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "id_product",
+                        "in": "path",
+                        "description": "Product ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product removed from cart",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "cart": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Product or Cart not found"
+                    }
+                }
+            }
+        },
         "/api/category": {
             "get": {
                 "tags": [
