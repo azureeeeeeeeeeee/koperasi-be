@@ -138,7 +138,10 @@ class CartController extends Controller
 
         $total = 0;
         foreach ($cart->products as $item) {
-            $total += $item->price * $item->pivot->jumlah;
+            $potongan = $item->category->potongan ?? 0;
+            $markup = $item->price * ($potongan / 100);
+            $realPrice = $item->price + $markup;
+            $total += $realPrice * $item->pivot->jumlah;
         }
 
         $cart->total_harga = $total;
@@ -286,7 +289,10 @@ class CartController extends Controller
 
         $total = 0;
         foreach ($cart->products as $item) {
-            $total += $item->price * $item->pivot->jumlah;
+            $potongan = $item->category->potongan ?? 0;
+            $markup = $item->price * ($potongan / 100);
+            $realPrice = $item->price + $markup;
+            $total += $realPrice * $item->pivot->jumlah;
         }
 
         $cart->total_harga = $total;
@@ -359,7 +365,10 @@ class CartController extends Controller
         $total = 0;
         foreach ($cart->products as $item) {
             if ($item->id != $id_product) {
-                $total += $item->price * $item->pivot->jumlah;
+                $potongan = $item->category->potongan ?? 0;
+                $markup = $item->price * ($potongan / 100);
+                $realPrice = $item->price + $markup;
+                $total += $realPrice * $item->pivot->jumlah;
             }
         }
 
@@ -438,7 +447,10 @@ class CartController extends Controller
 
         $total = 0;
         foreach ($cart->products as $item) {
-            $total += $item->price * $item->pivot->jumlah;
+            $potongan = $item->category->potongan ?? 0;
+            $markup = $item->price * ($potongan / 100);
+            $realPrice = $item->price + $markup;
+            $total += $realPrice * $item->pivot->jumlah;
         }
 
         $cart->total_harga = $total;
@@ -494,7 +506,10 @@ class CartController extends Controller
 
         $total = 0;
         foreach ($cart->products as $item) {
-            $total += $item->price * $item->pivot->jumlah;
+            $potongan = $item->category->potongan ?? 0;
+            $markup = $item->price * ($potongan / 100);
+            $realPrice = $item->price + $markup;
+            $total += $realPrice * $item->pivot->jumlah;
         }
 
         $cart->total_harga = $total;
@@ -538,7 +553,10 @@ class CartController extends Controller
 
         $total = 0;
         foreach ($cart->products as $item) {
-            $total += $item->price * $item->pivot->jumlah;
+            $potongan = $item->category->potongan ?? 0;
+            $markup = $item->price * ($potongan / 100);
+            $realPrice = $item->price + $markup;
+            $total += $realPrice * $item->pivot->jumlah;
         }
 
         // Update the cart total price
