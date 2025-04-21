@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PaymentGatewayController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\EmailController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -45,4 +46,11 @@ Route::prefix('payment')->group(function () {
     Route::post('/create', [PaymentGatewayController::class, 'createPayment']);
     Route::post('/test', [PaymentGatewayController::class, 'testMidtrans']);
     Route::get('/status', [PaymentGatewayController::class, 'checkPaymentStatus']);
+    Route::post('/membership', [PaymentGatewayController::class, 'payForMembership']);
+});
+
+// Mail Service Routes
+Route::prefix('mail')->group(function () {
+    Route::post('/send-otp', [EmailController::class, 'sendOtp']);
+    Route::post('/reset-password', [EmailController::class, 'resetPasswordWithOtp']);
 });

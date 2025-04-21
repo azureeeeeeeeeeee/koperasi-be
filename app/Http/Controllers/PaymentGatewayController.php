@@ -86,22 +86,19 @@ class PaymentGatewayController extends Controller
 
     public function checkPaymentStatus(Request $request)
     {
-        // Validate the input (ensure order_id is provided)
         $validatedData = $request->validate([
-            'order_id' => 'required|string', // Ensure order_id is a string
+            'order_id' => 'required|string',
         ]);
 
         try {
-            // Fetch the order ID from the request
             $orderId = $validatedData['order_id'];
 
-            // Setup Midtrans configuration
+            // Midtrans config
             Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-            Config::$isProduction = false; // Set to true for production
+            Config::$isProduction = false;
             Config::$isSanitized = true;
             Config::$is3ds = true;
 
-            // Call Midtrans API for transaction status
             $client = new \GuzzleHttp\Client();
             $response = $client->request('GET', "https://api.sandbox.midtrans.com/v2/{$orderId}/status", [
                 'headers' => [
@@ -111,7 +108,21 @@ class PaymentGatewayController extends Controller
 
             $status = json_decode($response->getBody()->getContents());
 
-            // If the status is found, return it
+            // Update payment status in DB
+            $payment = \App\Models\PaymentGateway::where('order_id', $orderId)->first();
+
+            if ($payment) {
+                $payment->payment_status = $status->transaction_status ?? 'unknown';
+                $payment->save();
+
+                // If paid successfully (settlement or capture), activate user
+                if (in_array($status->transaction_status, ['settlement', 'capture'])) {
+                    \App\Models\User::where('id', $payment->user_id)->update([
+                        'status_keanggotaan' => 'aktif'
+                    ]);
+                }
+            }
+
             return response()->json([
                 'order_id' => $orderId,
                 'payment_status' => $status->transaction_status ?? 'unknown',
@@ -122,7 +133,6 @@ class PaymentGatewayController extends Controller
         } catch (\Exception $e) {
             \Log::error('Payment status error: ' . $e->getMessage());
 
-            // Return error if the payment status check fails
             return response()->json([
                 'error' => 'Unable to fetch payment status',
                 'details' => $e->getMessage(),
@@ -131,5 +141,85 @@ class PaymentGatewayController extends Controller
     }
 
 
+    public function payForMembership(Request $request)
+    {
+        // Midtrans setup
+        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = false;
+        \Midtrans\Config::$isSanitized = true;
+        \Midtrans\Config::$is3ds = true;
+
+        // Validate input
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'payment_method' => 'required|string|in:qris',
+            'amount' => 'required|numeric|min:10000', // example: Rp 10.000 membership fee
+        ]);
+
+        // Get user
+        $user = \App\Models\User::find($validated['user_id']);
+
+        // Generate unique order_id
+        $order_id = 'MEMB-' . uniqid();
+
+        // Prepare payment payload
+        $params = [
+            'payment_type' => $validated['payment_method'],
+            'transaction_details' => [
+                'order_id' => $order_id,
+                'gross_amount' => $validated['amount'],
+            ],
+            'customer_details' => [
+                'first_name' => explode(' ', $user->fullname)[0],
+                'last_name' => explode(' ', $user->fullname)[1] ?? '',
+                'email' => $user->email,
+            ]
+        ];
+
+        try {
+            // Send to Midtrans
+            $charge = \Midtrans\CoreApi::charge($params);
+
+            // Save payment to DB
+            \App\Models\PaymentGateway::create([
+                'transaction_id' => $charge->transaction_id,
+                'order_id' => $order_id,
+                'user_id' => $user->id,
+                'payment_method' => $validated['payment_method'],
+                'payment_status' => $charge->transaction_status,
+                'payment_date' => now(),
+                'amount' => $validated['amount'],
+            ]);
+
+            // If settled, activate user
+            if ($charge->transaction_status === 'settlement') {
+                $user->status_keanggotaan = 'aktif';
+                $user->save();
+            }
+
+            // Return QR code (if available) and status
+            $qrUrl = null;
+            foreach ($charge->actions ?? [] as $action) {
+                if ($action->name === 'generate-qr-code') {
+                    $qrUrl = $action->url;
+                    break;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Payment initiated',
+                'status' => $charge->transaction_status ?? 'pending',
+                'order_id' => $order_id,
+                'qris_url' => $qrUrl,
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Membership payment error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to process payment',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 
 }
