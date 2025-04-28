@@ -26,9 +26,10 @@ Route::prefix('auth')->middleware('api')->group(function () {
     Route::post('/register/pengguna', [AuthController::class, 'register_pengguna'])->name('auth.register.pengguna');
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
-    Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
-    Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
-    Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
+    // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
+    // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
+    // Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
+    Route::get('/verify/{token}', [AuthController::class, 'verifyEmail'])->name('auth.verify');
 });
 
 // Admin Routes
