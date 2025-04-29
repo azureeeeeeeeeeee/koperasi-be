@@ -13,14 +13,16 @@ class otpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $otpCode;
+    public $verificationToken;
+    public $verificationUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($otpCode)
+    public function __construct($verificationToken)
     {
-        $this->otpCode = $otpCode;
+        $this->verificationToken = $verificationToken;
+        $this->verificationUrl = url('/api/auth/verify/' . $verificationToken);
     }
 
     /**
@@ -29,7 +31,7 @@ class otpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kode OTP Anda',
+            subject: 'Verifikasi Email Anda',
         );
     }
 
@@ -39,9 +41,10 @@ class otpMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.otp', // Pastikan buat file blade template ini
+            view: 'emails.otp',
             with: [
-                'otpCode' => $this->otpCode,
+                'verificationUrl' => $this->verificationUrl,
+                'verificationToken' => $this->verificationToken,
             ],
         );
     }
