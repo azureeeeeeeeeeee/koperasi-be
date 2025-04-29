@@ -62,7 +62,7 @@ Route::prefix('product')->group(function () {
 });
 
 // Cart Routes (Authenticated Users Only)
-Route::prefix('cart')->middleware('auth:sanctum')->group(function () {
+Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
     Route::get('/{id_user}', [CartController::class, 'show'])->name('cart.show');
     Route::post('/{id_user}/product/{id_product}', [CartController::class, 'add_item_to_cart'])->name('cart.add_item');
@@ -76,5 +76,12 @@ Route::prefix('guest/cart')->group(function () {
     Route::post('/{guest_id}/product/{id_product}', [CartController::class, 'guest_add_item'])->name('cart.guest.add_item');
     Route::put('/{guest_id}/product/{id_product}', [CartController::class, 'guest_update_item'])->name('cart.guest.update_item');
     Route::delete('/{guest_id}/product/{id_product}', [CartController::class, 'guest_remove_item'])->name('cart.guest.remove_item');
+});
+
+// Payment Gateway Routes
+Route::prefix('payment')->group(function () {
+    Route::post('/create', [PaymentGatewayController::class, 'createPayment'])->name('payment.create');
+    Route::get('/status', [PaymentGatewayController::class, 'checkPaymentStatus'])->name('payment.status');
+    Route::post('/cart_payment', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
 });
 

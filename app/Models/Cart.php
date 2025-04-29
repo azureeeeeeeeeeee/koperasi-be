@@ -17,4 +17,9 @@ class Cart extends Model
                     ->withPivot('jumlah')
                     ->withTimestamps();
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

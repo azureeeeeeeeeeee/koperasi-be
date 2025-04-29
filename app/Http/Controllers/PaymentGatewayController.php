@@ -114,12 +114,19 @@ class PaymentGatewayController extends Controller
             if ($payment) {
                 $payment->payment_status = $status->transaction_status ?? 'unknown';
                 $payment->save();
-
-                // If paid successfully (settlement or capture), activate user
+            
+                // If paid successfully (settlement or capture), activate user and update cart status
                 if (in_array($status->transaction_status, ['settlement', 'capture'])) {
                     \App\Models\User::where('id', $payment->user_id)->update([
                         'status_keanggotaan' => 'aktif'
                     ]);
+            
+                    // Update cart status to "Paid"
+                    $cart = \App\Models\Cart::where('id', $payment->cart_id)->first();
+                    if ($cart && $cart->status !== 'Paid') {
+                        $cart->status = 'Paid';
+                        $cart->save();
+                    }
                 }
             }
 
@@ -215,6 +222,85 @@ class PaymentGatewayController extends Controller
 
         } catch (\Exception $e) {
             \Log::error('Membership payment error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to process payment',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function payForCart(Request $request)
+    {
+        // Midtrans setup
+        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = false;
+        \Midtrans\Config::$isSanitized = true;
+        \Midtrans\Config::$is3ds = true;
+
+        // Validate input
+        $validated = $request->validate([
+            'cart_id' => 'required|exists:carts,id',
+            'payment_method' => 'required|string|in:qris',
+            'amount' => 'required|numeric|min:1000', // Minimum payment amount
+        ]);
+
+        // Get cart
+        $cart = \App\Models\Cart::find($validated['cart_id']);
+
+        // Generate unique order_id
+        $order_id = 'CART-' . uniqid();
+
+        // Prepare payment payload
+        $params = [
+            'payment_type' => $validated['payment_method'],
+            'transaction_details' => [
+                'order_id' => $order_id,
+                'gross_amount' => $validated['amount'],
+            ],
+            'customer_details' => [
+                'first_name' => $cart->user->name,
+                'email' => $cart->user->email,
+            ]
+        ];
+
+        try {
+            // Send to Midtrans
+            $charge = \Midtrans\CoreApi::charge($params);
+
+            // Save payment to DB
+            \App\Models\PaymentGateway::create([
+                'transaction_id' => $charge->transaction_id,
+                'order_id' => $order_id,
+                'user_id' => $cart->user_id,
+                'cart_id' => $cart->id,
+                'payment_method' => $validated['payment_method'],
+                'payment_status' => $charge->transaction_status,
+                'payment_date' => now(),
+                'amount' => $validated['amount'],
+            ]);
+
+            // Update cart status to "Menunggu pembayaran"
+            $cart->status = 'Menunggu pembayaran';
+            $cart->save();
+
+            // Return QR code (if available) and status
+            $qrUrl = null;
+            foreach ($charge->actions ?? [] as $action) {
+                if ($action->name === 'generate-qr-code') {
+                    $qrUrl = $action->url;
+                    break;
+                }
+            }
+
+            return response()->json([
+                'message' => 'Payment initiated',
+                'status' => $charge->transaction_status ?? 'pending',
+                'order_id' => $order_id,
+                'qris_url' => $qrUrl,
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Cart payment error: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to process payment',
                 'details' => $e->getMessage()

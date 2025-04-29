@@ -11,11 +11,12 @@ class PaymentGateway extends Model
 
     protected $fillable = [
         'transaction_id',
-        'order_id',   
+        'order_id',
         'user_id',
+        'cart_id',
         'payment_method',
         'payment_status',
         'payment_date',
-        'amount'
+        'amount',
     ];
 }
