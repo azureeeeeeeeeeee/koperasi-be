@@ -9,5 +9,5 @@ class Config extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'stock', 'price', 'user_id', 'category_id'];
+    protected $fillable = ['key', 'value'];
 }
