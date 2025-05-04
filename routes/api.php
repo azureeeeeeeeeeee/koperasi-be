@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -77,3 +78,10 @@ Route::prefix('guest/cart')->group(function () {
     Route::delete('/{guest_id}/product/{id_product}', [CartController::class, 'guest_remove_item'])->name('cart.guest.remove_item');
 });
 
+Route::prefix('config')->group(function () {
+    Route::get('/', [ConfigController::class, 'index'])->name('config.index')->middleware('auth:sanctum');
+    Route::get('/{id}', [ConfigController::class, 'show'])->name('config.show')->middleware('auth:sanctum');
+    Route::post('/', [ConfigController::class, 'create'])->name('config.create')->middleware('auth:sanctum');
+    Route::put('/{id}', [ConfigController::class, 'update'])->name('config.update')->middleware('auth:sanctum');
+    Route::delete('/{id}', [ConfigController::class, 'destroy'])->name('config.delete')->middleware('auth:sanctum');
+});
