@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PaymentGatewayController;
 use Illuminate\Http\Request;
@@ -95,4 +96,11 @@ Route::prefix('email')->group(function () {
     Route::post('/send-otp', [EmailController::class, 'sendOtp'])->name('email.sendOtp');
     Route::post('/verify-otp', [EmailController::class, 'verifyOtp'])->name('email.verifyOtp');
     Route::post('/reset-password', [EmailController::class, 'resetPasswordWithOtp'])->name('email.resetPasswordWithOtp');
+});
+Route::prefix('config')->group(function () {
+    Route::get('/', [ConfigController::class, 'index'])->name('config.index')->middleware('auth:sanctum');
+    Route::get('/{id}', [ConfigController::class, 'show'])->name('config.show')->middleware('auth:sanctum');
+    Route::post('/', [ConfigController::class, 'create'])->name('config.create')->middleware('auth:sanctum');
+    Route::put('/{id}', [ConfigController::class, 'update'])->name('config.update')->middleware('auth:sanctum');
+    Route::delete('/{id}', [ConfigController::class, 'destroy'])->name('config.delete')->middleware('auth:sanctum');
 });
