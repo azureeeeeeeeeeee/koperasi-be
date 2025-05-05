@@ -12,6 +12,36 @@ use Illuminate\Support\Facades\Hash;
 
 class EmailController extends Controller
 {
+
+    /**
+     * @OA\Post(
+     *     path="/send-otp",
+     *     summary="Send OTP to user's email",
+     *     tags={"Email"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP sent successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="OTP sent successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The email field is required.")
+     *         )
+     *     )
+     * )
+     */
+
     public function sendOtp(Request $request)
     {
         $request->validate([
@@ -34,22 +64,44 @@ class EmailController extends Controller
         ]);
     }
 
-    // public function sendOtp(Request $request)
-    // {
-    //     $request->validate([
-    //         'email' => 'required|email',
-    //     ]);
-
-    //     $otp = rand(100000, 999999);
-
-    //     // Send the email
-    //     Mail::to($request->email)->send(new MailCP($otp));
-
-    //     return response()->json([
-    //         'message' => 'OTP sent successfully',
-    //         'otp' => $otp // Remove this line in production to keep OTP secret
-    //     ]);
-    // }
+    /**
+     * @OA\Post(
+     *     path="/reset-password-with-otp",
+     *     summary="Reset password using OTP",
+     *     tags={"Email"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "otp", "new_password", "new_password_confirmation"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="otp", type="string", example="123456"),
+     *             @OA\Property(property="new_password", type="string", format="password", example="newpassword123"),
+     *             @OA\Property(property="new_password_confirmation", type="string", format="password", example="newpassword123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Password has been reset successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Password has been reset successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid or expired OTP",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Invalid or expired OTP")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="The email field is required.")
+     *         )
+     *     )
+     * )
+     */
 
     public function resetPasswordWithOtp(Request $request)
     {

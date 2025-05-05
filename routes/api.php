@@ -85,3 +85,8 @@ Route::prefix('payment')->group(function () {
     Route::post('/cart_payment', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
 });
 
+// Email Routes
+Route::prefix('email')->group(function () {
+    Route::post('/send-otp', [EmailController::class, 'sendOtp'])->name('email.sendOtp');
+    Route::post('/reset-password', [EmailController::class, 'resetPasswordWithOtp'])->name('email.resetPasswordWithOtp');
+});

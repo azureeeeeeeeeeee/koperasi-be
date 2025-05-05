@@ -11,6 +11,39 @@ use Illuminate\Http\Request;
 class PaymentGatewayController extends Controller
 {
     
+    /**
+     * @OA\Post(
+     *     path="/create-payment",
+     *     summary="Create a new payment",
+     *     tags={"Payment Gateway"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"user_id", "payment_method", "amount"},
+     *             @OA\Property(property="user_id", type="integer", example=1, description="ID of the user making the payment"),
+     *             @OA\Property(property="payment_method", type="string", enum={"qris"}, example="qris", description="Payment method"),
+     *             @OA\Property(property="amount", type="number", format="float", example=100000, description="Payment amount")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Payment created successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="qris_url", type="string", example="https://example.com/qr-code", description="QRIS URL for payment"),
+     *             @OA\Property(property="payment", type="object", description="Payment details")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Something went wrong"),
+     *             @OA\Property(property="details", type="string", example="Error details")
+     *         )
+     *     )
+     * )
+     */
+    
     public function createPayment(Request $request)
     {
         // Setup Midtrans config
@@ -84,6 +117,39 @@ class PaymentGatewayController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/check-payment-status",
+     *     summary="Check the status of a payment",
+     *     tags={"Payment Gateway"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"order_id"},
+     *             @OA\Property(property="order_id", type="string", example="ORD-123456", description="Order ID of the payment")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Payment status retrieved successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="order_id", type="string", example="ORD-123456"),
+     *             @OA\Property(property="payment_status", type="string", example="settlement"),
+     *             @OA\Property(property="transaction_id", type="string", example="abc123"),
+     *             @OA\Property(property="payment_date", type="string", example="2023-01-01T12:00:00Z")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unable to fetch payment status"),
+     *             @OA\Property(property="details", type="string", example="Error details")
+     *         )
+     *     )
+     * )
+     */
+
     public function checkPaymentStatus(Request $request)
     {
         $validatedData = $request->validate([
@@ -147,6 +213,40 @@ class PaymentGatewayController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/pay-for-membership",
+     *     summary="Pay for membership",
+     *     tags={"Payment Gateway"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"user_id", "payment_method", "amount"},
+     *             @OA\Property(property="user_id", type="integer", example=1, description="ID of the user"),
+     *             @OA\Property(property="payment_method", type="string", enum={"qris"}, example="qris", description="Payment method"),
+     *             @OA\Property(property="amount", type="number", format="float", example=10000, description="Membership fee amount")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Membership payment initiated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Payment initiated"),
+     *             @OA\Property(property="status", type="string", example="pending"),
+     *             @OA\Property(property="order_id", type="string", example="MEMB-123456"),
+     *             @OA\Property(property="qris_url", type="string", example="https://example.com/qr-code")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Failed to process payment"),
+     *             @OA\Property(property="details", type="string", example="Error details")
+     *         )
+     *     )
+     * )
+     */
 
     public function payForMembership(Request $request)
     {
@@ -228,6 +328,41 @@ class PaymentGatewayController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * @OA\Post(
+     *     path="/pay-for-cart",
+     *     summary="Pay for a cart",
+     *     tags={"Payment Gateway"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"cart_id", "payment_method", "amount"},
+     *             @OA\Property(property="cart_id", type="integer", example=1, description="ID of the cart"),
+     *             @OA\Property(property="payment_method", type="string", enum={"qris"}, example="qris", description="Payment method"),
+     *             @OA\Property(property="amount", type="number", format="float", example=50000, description="Cart payment amount")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Cart payment initiated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Payment initiated"),
+     *             @OA\Property(property="status", type="string", example="pending"),
+     *             @OA\Property(property="order_id", type="string", example="CART-123456"),
+     *             @OA\Property(property="qris_url", type="string", example="https://example.com/qr-code")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Internal server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Failed to process payment"),
+     *             @OA\Property(property="details", type="string", example="Error details")
+     *         )
+     *     )
+     * )
+     */
 
     public function payForCart(Request $request)
     {

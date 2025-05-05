@@ -1409,6 +1409,522 @@
                 ]
             }
         },
+        "/send-otp": {
+            "post": {
+                "tags": [
+                    "Email"
+                ],
+                "summary": "Send OTP to user's email",
+                "operationId": "5288261580b5a5ff1ccacb763137f729",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP sent successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The email field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reset-password-with-otp": {
+            "post": {
+                "tags": [
+                    "Email"
+                ],
+                "summary": "Reset password using OTP",
+                "operationId": "558937275473a28e89eb21c007a4c0a1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "otp",
+                                    "new_password",
+                                    "new_password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    },
+                                    "new_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "new_password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password has been reset successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password has been reset successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or expired OTP",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid or expired OTP"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The email field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/create-payment": {
+            "post": {
+                "tags": [
+                    "Payment Gateway"
+                ],
+                "summary": "Create a new payment",
+                "operationId": "adee2709da37538f6f907c6007b15fbe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "payment_method",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID of the user making the payment",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "payment_method": {
+                                        "description": "Payment method",
+                                        "type": "string",
+                                        "enum": [
+                                            "qris"
+                                        ],
+                                        "example": "qris"
+                                    },
+                                    "amount": {
+                                        "description": "Payment amount",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Payment created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "qris_url": {
+                                            "description": "QRIS URL for payment",
+                                            "type": "string",
+                                            "example": "https://example.com/qr-code"
+                                        },
+                                        "payment": {
+                                            "description": "Payment details",
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Something went wrong"
+                                        },
+                                        "details": {
+                                            "type": "string",
+                                            "example": "Error details"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/check-payment-status": {
+            "post": {
+                "tags": [
+                    "Payment Gateway"
+                ],
+                "summary": "Check the status of a payment",
+                "operationId": "be3dc4469bc7f8ff936be52914e1eb3c",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_id"
+                                ],
+                                "properties": {
+                                    "order_id": {
+                                        "description": "Order ID of the payment",
+                                        "type": "string",
+                                        "example": "ORD-123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment status retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "order_id": {
+                                            "type": "string",
+                                            "example": "ORD-123456"
+                                        },
+                                        "payment_status": {
+                                            "type": "string",
+                                            "example": "settlement"
+                                        },
+                                        "transaction_id": {
+                                            "type": "string",
+                                            "example": "abc123"
+                                        },
+                                        "payment_date": {
+                                            "type": "string",
+                                            "example": "2023-01-01T12:00:00Z"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unable to fetch payment status"
+                                        },
+                                        "details": {
+                                            "type": "string",
+                                            "example": "Error details"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pay-for-membership": {
+            "post": {
+                "tags": [
+                    "Payment Gateway"
+                ],
+                "summary": "Pay for membership",
+                "operationId": "d0673530e9493d1705a8326950e31bb9",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "payment_method",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID of the user",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "payment_method": {
+                                        "description": "Payment method",
+                                        "type": "string",
+                                        "enum": [
+                                            "qris"
+                                        ],
+                                        "example": "qris"
+                                    },
+                                    "amount": {
+                                        "description": "Membership fee amount",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Membership payment initiated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment initiated"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "pending"
+                                        },
+                                        "order_id": {
+                                            "type": "string",
+                                            "example": "MEMB-123456"
+                                        },
+                                        "qris_url": {
+                                            "type": "string",
+                                            "example": "https://example.com/qr-code"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to process payment"
+                                        },
+                                        "details": {
+                                            "type": "string",
+                                            "example": "Error details"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/pay-for-cart": {
+            "post": {
+                "tags": [
+                    "Payment Gateway"
+                ],
+                "summary": "Pay for a cart",
+                "operationId": "5916f424983aa45f1f83e7cb8c39f752",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "cart_id",
+                                    "payment_method",
+                                    "amount"
+                                ],
+                                "properties": {
+                                    "cart_id": {
+                                        "description": "ID of the cart",
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "payment_method": {
+                                        "description": "Payment method",
+                                        "type": "string",
+                                        "enum": [
+                                            "qris"
+                                        ],
+                                        "example": "qris"
+                                    },
+                                    "amount": {
+                                        "description": "Cart payment amount",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50000
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Cart payment initiated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Payment initiated"
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "example": "pending"
+                                        },
+                                        "order_id": {
+                                            "type": "string",
+                                            "example": "CART-123456"
+                                        },
+                                        "qris_url": {
+                                            "type": "string",
+                                            "example": "https://example.com/qr-code"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Failed to process payment"
+                                        },
+                                        "details": {
+                                            "type": "string",
+                                            "example": "Error details"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/product": {
             "get": {
                 "tags": [
@@ -1842,6 +2358,14 @@
         {
             "name": "Cart",
             "description": "API endpoints to handle Cart"
+        },
+        {
+            "name": "Email",
+            "description": "Email"
+        },
+        {
+            "name": "Payment Gateway",
+            "description": "Payment Gateway"
         },
         {
             "name": "Product",
