@@ -14,23 +14,56 @@ class PaymentGatewayController extends Controller
     /**
      * @OA\Post(
      *     path="/api/payment/create-payment",
-     *     summary="Create a new payment",
+     *     summary="Create a new payment using QRIS or payment link",
      *     tags={"Payment Gateway"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"user_id", "payment_method", "amount"},
-     *             @OA\Property(property="user_id", type="integer", example=1, description="ID of the user making the payment"),
-     *             @OA\Property(property="payment_method", type="string", enum={"qris"}, example="qris", description="Payment method"),
-     *             @OA\Property(property="amount", type="number", format="float", example=100000, description="Payment amount")
+     *             @OA\Property(
+     *                 property="user_id",
+     *                 type="integer",
+     *                 example=1,
+     *                 description="ID of the user making the payment"
+     *             ),
+     *             @OA\Property(
+     *                 property="payment_method",
+     *                 type="string",
+     *                 enum={"qris", "link"},
+     *                 example="qris",
+     *                 description="Payment method to use (qris or link)"
+     *             ),
+     *             @OA\Property(
+     *                 property="amount",
+     *                 type="number",
+     *                 format="float",
+     *                 example=100000,
+     *                 description="Amount to be paid"
+     *             )
      *         )
      *     ),
      *     @OA\Response(
      *         response=201,
      *         description="Payment created successfully",
      *         @OA\JsonContent(
-     *             @OA\Property(property="qris_url", type="string", example="https://example.com/qr-code", description="QRIS URL for payment"),
-     *             @OA\Property(property="payment", type="object", description="Payment details")
+     *             @OA\Property(
+     *                 property="payment_url",
+     *                 type="string",
+     *                 example="https://app.sandbox.midtrans.com/snap/v2/vtweb/ABC123",
+     *                 description="Redirect URL for payment (QR code or Snap payment link)"
+     *             ),
+     *             @OA\Property(
+     *                 property="payment",
+     *                 type="object",
+     *                 description="Payment details",
+     *                 @OA\Property(property="transaction_id", type="string", example="txn_654321"),
+     *                 @OA\Property(property="order_id", type="string", example="ORD-123456"),
+     *                 @OA\Property(property="user_id", type="integer", example=1),
+     *                 @OA\Property(property="payment_method", type="string", example="qris"),
+     *                 @OA\Property(property="payment_status", type="string", example="pending"),
+     *                 @OA\Property(property="payment_date", type="string", format="date-time", example="2025-05-05T14:30:00Z"),
+     *                 @OA\Property(property="amount", type="number", format="float", example=100000)
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -38,84 +71,107 @@ class PaymentGatewayController extends Controller
      *         description="Internal server error",
      *         @OA\JsonContent(
      *             @OA\Property(property="error", type="string", example="Something went wrong"),
-     *             @OA\Property(property="details", type="string", example="Error details")
+     *             @OA\Property(property="details", type="string", example="Payment error: Server timeout")
      *         )
      *     )
      * )
      */
+
     
-    public function createPayment(Request $request)
-    {
-        // Setup Midtrans config
-        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        Config::$isProduction = false;
-        Config::$isSanitized = true;
-        Config::$is3ds = true;
-
-        // Validate input
-        $validatedData = $request->validate([
-            'user_id' => 'required|integer',
-            'payment_method' => 'required|string|in:qris', // You can allow more types if needed
-            'amount' => 'required|numeric|min:0',
-        ]);
-
-        // Generate unique numeric order_id
-        $order_id = 'ORD-' . rand(100000, 999999);
-
-        // Prepare Midtrans charge params
-        $params = [
-            'payment_type' => $validatedData['payment_method'],
-            'transaction_details' => [
-                'order_id' => $order_id,
-                'gross_amount' => $validatedData['amount'],
-            ],
-            'customer_details' => [
-                'first_name' => 'User',
-                'last_name' => 'Example',
-                'email' => 'user@example.com',
-            ]
-        ];
-
-        try {
-            // Call Core API to charge
-            $charge = CoreApi::charge($params);
-
-            // Get QRIS URL (if QRIS used)
-            $qrUrl = null;
-            if (isset($charge->actions)) { // Use object notation
-                foreach ($charge->actions as $action) {
-                    if ($action->name === 'generate-qr-code') { // Use object notation
-                        $qrUrl = $action->url; // Use object notation
-                        break;
-                    }
-                }
-            }
-
-            // Save to database
-            $payment = PaymentGateway::create([
-                'transaction_id' => $charge->transaction_id, // Use object notation
-                'order_id' => $order_id,
-                'user_id' => $validatedData['user_id'],
-                'payment_method' => $validatedData['payment_method'],
-                'payment_status' => $charge->transaction_status ?? 'pending', // Use object notation
-                'payment_date' => now(),
-                'amount' => $validatedData['amount'],
-            ]);
-
-            // Return QRIS URL + payment
-            return response()->json([
-                'qris_url' => $qrUrl,
-                'payment' => $payment
-            ], 201);
-
-        } catch (\Exception $e) {
-            \Log::error('Payment error: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Something went wrong',
-                'details' => $e->getMessage()
-            ], 500);
-        }
-    }
+     public function createPayment(Request $request)
+     {
+         // Setup Midtrans config
+         Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+         Config::$isProduction = false;
+         Config::$isSanitized = true;
+         Config::$is3ds = true;
+     
+         // Validate input
+         $validatedData = $request->validate([
+             'user_id' => 'required|integer',
+             'payment_method' => 'required|string|in:qris,link', // allow both
+             'amount' => 'required|numeric|min:0',
+         ]);
+     
+         // Generate unique numeric order_id
+         $order_id = 'ORD-' . rand(100000, 999999);
+     
+         // Common transaction params
+         $transactionDetails = [
+             'order_id' => $order_id,
+             'gross_amount' => $validatedData['amount'],
+         ];
+     
+         $customerDetails = [
+             'first_name' => 'User',
+             'last_name' => 'Example',
+             'email' => 'user@example.com',
+         ];
+     
+         try {
+             $charge = null;
+             $paymentUrl = null;
+     
+             if ($validatedData['payment_method'] === 'qris') {
+                 // Use Core API for QRIS
+                 $params = [
+                     'payment_type' => 'qris',
+                     'transaction_details' => $transactionDetails,
+                     'customer_details' => $customerDetails,
+                 ];
+     
+                 $charge = CoreApi::charge($params);
+     
+                 // Get QR URL from action
+                 foreach ($charge->actions as $action) {
+                     if ($action->name === 'generate-qr-code') {
+                         $paymentUrl = $action->url;
+                         break;
+                     }
+                 }
+             } else {
+                 // Use Snap API for "link" method
+                 $params = [
+                     'transaction_details' => $transactionDetails,
+                     'customer_details' => $customerDetails,
+                     // optionally: 'enabled_payments' => ['gopay', 'bank_transfer', ...],
+                 ];
+     
+                 $snapUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+                 $paymentUrl = $snapUrl;
+     
+                 // Simulate a successful charge object (Snap doesn't return full CoreApi data)
+                 $charge = (object)[
+                     'transaction_id' => uniqid('txn_'),
+                     'transaction_status' => 'pending',
+                 ];
+             }
+     
+             // Save to database
+             $payment = PaymentGateway::create([
+                 'transaction_id' => $charge->transaction_id,
+                 'order_id' => $order_id,
+                 'user_id' => $validatedData['user_id'],
+                 'payment_method' => $validatedData['payment_method'],
+                 'payment_status' => $charge->transaction_status ?? 'pending',
+                 'payment_date' => now(),
+                 'amount' => $validatedData['amount'],
+             ]);
+     
+             return response()->json([
+                 'payment_url' => $paymentUrl,
+                 'payment' => $payment
+             ], 201);
+     
+         } catch (\Exception $e) {
+             \Log::error('Payment error: ' . $e->getMessage());
+             return response()->json([
+                 'error' => 'Something went wrong',
+                 'details' => $e->getMessage()
+             ], 500);
+         }
+     }
+     
 
     /**
      * @OA\Post(
@@ -248,86 +304,108 @@ class PaymentGatewayController extends Controller
      * )
      */
 
-    public function payForMembership(Request $request)
-    {
-        // Midtrans setup
-        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        \Midtrans\Config::$isProduction = false;
-        \Midtrans\Config::$isSanitized = true;
-        \Midtrans\Config::$is3ds = true;
-
-        // Validate input
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'payment_method' => 'required|string|in:qris',
-            'amount' => 'required|numeric|min:10000', // example: Rp 10.000 membership fee
-        ]);
-
-        // Get user
-        $user = \App\Models\User::find($validated['user_id']);
-
-        // Generate unique order_id
-        $order_id = 'MEMB-' . uniqid();
-
-        // Prepare payment payload
-        $params = [
-            'payment_type' => $validated['payment_method'],
-            'transaction_details' => [
-                'order_id' => $order_id,
-                'gross_amount' => $validated['amount'],
-            ],
-            'customer_details' => [
-                'first_name' => explode(' ', $user->fullname)[0],
-                'last_name' => explode(' ', $user->fullname)[1] ?? '',
-                'email' => $user->email,
-            ]
-        ];
-
-        try {
-            // Send to Midtrans
-            $charge = \Midtrans\CoreApi::charge($params);
-
-            // Save payment to DB
-            \App\Models\PaymentGateway::create([
-                'transaction_id' => $charge->transaction_id,
-                'order_id' => $order_id,
-                'user_id' => $user->id,
-                'payment_method' => $validated['payment_method'],
-                'payment_status' => $charge->transaction_status,
-                'payment_date' => now(),
-                'amount' => $validated['amount'],
-            ]);
-
-            // If settled, activate user
-            if ($charge->transaction_status === 'settlement') {
-                $user->status_keanggotaan = 'aktif';
-                $user->save();
-            }
-
-            // Return QR code (if available) and status
-            $qrUrl = null;
-            foreach ($charge->actions ?? [] as $action) {
-                if ($action->name === 'generate-qr-code') {
-                    $qrUrl = $action->url;
-                    break;
-                }
-            }
-
-            return response()->json([
-                'message' => 'Payment initiated',
-                'status' => $charge->transaction_status ?? 'pending',
-                'order_id' => $order_id,
-                'qris_url' => $qrUrl,
-            ], 201);
-
-        } catch (\Exception $e) {
-            \Log::error('Membership payment error: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Failed to process payment',
-                'details' => $e->getMessage()
-            ], 500);
-        }
-    }
+     public function payForMembership(Request $request)
+     {
+         // Midtrans setup
+         \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+         \Midtrans\Config::$isProduction = false;
+         \Midtrans\Config::$isSanitized = true;
+         \Midtrans\Config::$is3ds = true;
+     
+         // Validate input
+         $validated = $request->validate([
+             'user_id' => 'required|exists:users,id',
+             'payment_method' => 'required|string|in:qris,link',
+             'amount' => 'required|numeric|min:10000',
+         ]);
+     
+         // Get user
+         $user = \App\Models\User::find($validated['user_id']);
+     
+         // Generate unique order_id
+         $order_id = 'MEMB-' . uniqid();
+     
+         try {
+             $charge = null;
+             $paymentUrl = null;
+     
+             if ($validated['payment_method'] === 'qris') {
+                 $params = [
+                     'payment_type' => 'qris',
+                     'transaction_details' => [
+                         'order_id' => $order_id,
+                         'gross_amount' => $validated['amount'],
+                     ],
+                     'customer_details' => [
+                         'first_name' => explode(' ', $user->fullname)[0],
+                         'last_name' => explode(' ', $user->fullname)[1] ?? '',
+                         'email' => $user->email,
+                     ]
+                 ];
+     
+                 $charge = \Midtrans\CoreApi::charge($params);
+     
+                 // Get QR URL
+                 foreach ($charge->actions ?? [] as $action) {
+                     if ($action->name === 'generate-qr-code') {
+                         $paymentUrl = $action->url;
+                         break;
+                     }
+                 }
+             } else {
+                 // Use Snap API for 'link'
+                 $params = [
+                     'transaction_details' => [
+                         'order_id' => $order_id,
+                         'gross_amount' => $validated['amount'],
+                     ],
+                     'customer_details' => [
+                         'first_name' => explode(' ', $user->fullname)[0],
+                         'last_name' => explode(' ', $user->fullname)[1] ?? '',
+                         'email' => $user->email,
+                     ],
+                 ];
+     
+                 $snapUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+                 $paymentUrl = $snapUrl;
+     
+                 $charge = (object)[
+                     'transaction_id' => uniqid('txn_'),
+                     'transaction_status' => 'pending',
+                 ];
+             }
+     
+             \App\Models\PaymentGateway::create([
+                 'transaction_id' => $charge->transaction_id,
+                 'order_id' => $order_id,
+                 'user_id' => $user->id,
+                 'payment_method' => $validated['payment_method'],
+                 'payment_status' => $charge->transaction_status,
+                 'payment_date' => now(),
+                 'amount' => $validated['amount'],
+             ]);
+     
+             if ($charge->transaction_status === 'settlement') {
+                 $user->status_keanggotaan = 'aktif';
+                 $user->save();
+             }
+     
+             return response()->json([
+                 'message' => 'Payment initiated',
+                 'status' => $charge->transaction_status ?? 'pending',
+                 'order_id' => $order_id,
+                 'qris_url' => $paymentUrl,
+             ], 201);
+     
+         } catch (\Exception $e) {
+             \Log::error('Membership payment error: ' . $e->getMessage());
+             return response()->json([
+                 'error' => 'Failed to process payment',
+                 'details' => $e->getMessage()
+             ], 500);
+         }
+     }
+     
 
     /**
      * @OA\Post(
@@ -364,83 +442,103 @@ class PaymentGatewayController extends Controller
      * )
      */
 
-    public function payForCart(Request $request)
-    {
-        // Midtrans setup
-        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-        \Midtrans\Config::$isProduction = false;
-        \Midtrans\Config::$isSanitized = true;
-        \Midtrans\Config::$is3ds = true;
-
-        // Validate input
-        $validated = $request->validate([
-            'cart_id' => 'required|exists:carts,id',
-            'payment_method' => 'required|string|in:qris',
-            'amount' => 'required|numeric|min:1000', // Minimum payment amount
-        ]);
-
-        // Get cart
-        $cart = \App\Models\Cart::find($validated['cart_id']);
-
-        // Generate unique order_id
-        $order_id = 'CART-' . uniqid();
-
-        // Prepare payment payload
-        $params = [
-            'payment_type' => $validated['payment_method'],
-            'transaction_details' => [
-                'order_id' => $order_id,
-                'gross_amount' => $validated['amount'],
-            ],
-            'customer_details' => [
-                'first_name' => $cart->user->name,
-                'email' => $cart->user->email,
-            ]
-        ];
-
-        try {
-            // Send to Midtrans
-            $charge = \Midtrans\CoreApi::charge($params);
-
-            // Save payment to DB
-            \App\Models\PaymentGateway::create([
-                'transaction_id' => $charge->transaction_id,
-                'order_id' => $order_id,
-                'user_id' => $cart->user_id,
-                'cart_id' => $cart->id,
-                'payment_method' => $validated['payment_method'],
-                'payment_status' => $charge->transaction_status,
-                'payment_date' => now(),
-                'amount' => $validated['amount'],
-            ]);
-
-            // Update cart status to "Menunggu pembayaran"
-            $cart->status = 'Menunggu pembayaran';
-            $cart->save();
-
-            // Return QR code (if available) and status
-            $qrUrl = null;
-            foreach ($charge->actions ?? [] as $action) {
-                if ($action->name === 'generate-qr-code') {
-                    $qrUrl = $action->url;
-                    break;
-                }
-            }
-
-            return response()->json([
-                'message' => 'Payment initiated',
-                'status' => $charge->transaction_status ?? 'pending',
-                'order_id' => $order_id,
-                'qris_url' => $qrUrl,
-            ], 201);
-
-        } catch (\Exception $e) {
-            \Log::error('Cart payment error: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Failed to process payment',
-                'details' => $e->getMessage()
-            ], 500);
-        }
-    }
+     public function payForCart(Request $request)
+     {
+         // Midtrans setup
+         \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+         \Midtrans\Config::$isProduction = false;
+         \Midtrans\Config::$isSanitized = true;
+         \Midtrans\Config::$is3ds = true;
+     
+         // Validate input
+         $validated = $request->validate([
+             'cart_id' => 'required|exists:carts,id',
+             'payment_method' => 'required|string|in:qris,link',
+             'amount' => 'required|numeric|min:1000',
+         ]);
+     
+         // Get cart
+         $cart = \App\Models\Cart::find($validated['cart_id']);
+     
+         // Generate unique order_id
+         $order_id = 'CART-' . uniqid();
+     
+         try {
+             $charge = null;
+             $paymentUrl = null;
+     
+             if ($validated['payment_method'] === 'qris') {
+                 $params = [
+                     'payment_type' => 'qris',
+                     'transaction_details' => [
+                         'order_id' => $order_id,
+                         'gross_amount' => $validated['amount'],
+                     ],
+                     'customer_details' => [
+                         'first_name' => $cart->user->name,
+                         'email' => $cart->user->email,
+                     ]
+                 ];
+     
+                 $charge = \Midtrans\CoreApi::charge($params);
+     
+                 foreach ($charge->actions ?? [] as $action) {
+                     if ($action->name === 'generate-qr-code') {
+                         $paymentUrl = $action->url;
+                         break;
+                     }
+                 }
+             } else {
+                 // Use Snap API for 'link'
+                 $params = [
+                     'transaction_details' => [
+                         'order_id' => $order_id,
+                         'gross_amount' => $validated['amount'],
+                     ],
+                     'customer_details' => [
+                         'first_name' => $cart->user->name,
+                         'email' => $cart->user->email,
+                     ]
+                 ];
+     
+                 $snapUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+                 $paymentUrl = $snapUrl;
+     
+                 $charge = (object)[
+                     'transaction_id' => uniqid('txn_'),
+                     'transaction_status' => 'pending',
+                 ];
+             }
+     
+             \App\Models\PaymentGateway::create([
+                 'transaction_id' => $charge->transaction_id,
+                 'order_id' => $order_id,
+                 'user_id' => $cart->user_id,
+                 'cart_id' => $cart->id,
+                 'payment_method' => $validated['payment_method'],
+                 'payment_status' => $charge->transaction_status,
+                 'payment_date' => now(),
+                 'amount' => $validated['amount'],
+             ]);
+     
+             $cart->status = 'Menunggu pembayaran';
+             $cart->save();
+     
+             return response()->json([
+                 'message' => 'Payment initiated',
+                 'status' => $charge->transaction_status ?? 'pending',
+                 'order_id' => $order_id,
+                 'qris_url' => $paymentUrl,
+             ], 201);
+     
+         } catch (\Exception $e) {
+             \Log::error('Cart payment error: ' . $e->getMessage());
+             return response()->json([
+                 'error' => 'Failed to process payment',
+                 'details' => $e->getMessage()
+             ], 500);
+         }
+     }
+     
 
 }

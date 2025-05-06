@@ -1573,7 +1573,7 @@
                 "tags": [
                     "Payment Gateway"
                 ],
-                "summary": "Create a new payment",
+                "summary": "Create a new payment using QRIS or payment link",
                 "operationId": "645c1dff4961fbac6b50d2ee13e828dc",
                 "requestBody": {
                     "required": true,
@@ -1592,15 +1592,16 @@
                                         "example": 1
                                     },
                                     "payment_method": {
-                                        "description": "Payment method",
+                                        "description": "Payment method to use (qris or link)",
                                         "type": "string",
                                         "enum": [
-                                            "qris"
+                                            "qris",
+                                            "link"
                                         ],
                                         "example": "qris"
                                     },
                                     "amount": {
-                                        "description": "Payment amount",
+                                        "description": "Amount to be paid",
                                         "type": "number",
                                         "format": "float",
                                         "example": 100000
@@ -1618,13 +1619,45 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "qris_url": {
-                                            "description": "QRIS URL for payment",
+                                        "payment_url": {
+                                            "description": "Redirect URL for payment (QR code or Snap payment link)",
                                             "type": "string",
-                                            "example": "https://example.com/qr-code"
+                                            "example": "https://app.sandbox.midtrans.com/snap/v2/vtweb/ABC123"
                                         },
                                         "payment": {
                                             "description": "Payment details",
+                                            "properties": {
+                                                "transaction_id": {
+                                                    "type": "string",
+                                                    "example": "txn_654321"
+                                                },
+                                                "order_id": {
+                                                    "type": "string",
+                                                    "example": "ORD-123456"
+                                                },
+                                                "user_id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "payment_method": {
+                                                    "type": "string",
+                                                    "example": "qris"
+                                                },
+                                                "payment_status": {
+                                                    "type": "string",
+                                                    "example": "pending"
+                                                },
+                                                "payment_date": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-05-05T14:30:00Z"
+                                                },
+                                                "amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100000
+                                                }
+                                            },
                                             "type": "object"
                                         }
                                     },
@@ -1645,7 +1678,7 @@
                                         },
                                         "details": {
                                             "type": "string",
-                                            "example": "Error details"
+                                            "example": "Payment error: Server timeout"
                                         }
                                     },
                                     "type": "object"
