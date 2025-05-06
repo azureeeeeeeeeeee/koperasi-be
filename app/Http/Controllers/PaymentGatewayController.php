@@ -279,7 +279,7 @@ class PaymentGatewayController extends Controller
      *         @OA\JsonContent(
      *             required={"user_id", "payment_method", "amount"},
      *             @OA\Property(property="user_id", type="integer", example=1, description="ID of the user"),
-     *             @OA\Property(property="payment_method", type="string", enum={"qris"}, example="qris", description="Payment method"),
+     *             @OA\Property(property="payment_method", type="string", enum={"qris", "link"}, example="qris", description="Payment method"),
      *             @OA\Property(property="amount", type="number", format="float", example=10000, description="Membership fee amount")
      *         )
      *     ),
@@ -290,7 +290,7 @@ class PaymentGatewayController extends Controller
      *             @OA\Property(property="message", type="string", example="Payment initiated"),
      *             @OA\Property(property="status", type="string", example="pending"),
      *             @OA\Property(property="order_id", type="string", example="MEMB-123456"),
-     *             @OA\Property(property="qris_url", type="string", example="https://example.com/qr-code")
+     *             @OA\Property(property="payment_url", type="string", example="https://example.com/payment-link"),
      *         )
      *     ),
      *     @OA\Response(
@@ -394,7 +394,7 @@ class PaymentGatewayController extends Controller
                  'message' => 'Payment initiated',
                  'status' => $charge->transaction_status ?? 'pending',
                  'order_id' => $order_id,
-                 'qris_url' => $paymentUrl,
+                 'payment_url' => $paymentUrl,
              ], 201);
      
          } catch (\Exception $e) {
@@ -417,7 +417,7 @@ class PaymentGatewayController extends Controller
      *         @OA\JsonContent(
      *             required={"cart_id", "payment_method", "amount"},
      *             @OA\Property(property="cart_id", type="integer", example=1, description="ID of the cart"),
-     *             @OA\Property(property="payment_method", type="string", enum={"qris"}, example="qris", description="Payment method"),
+     *             @OA\Property(property="payment_method", type="string", enum={"qris", "link"}, example="qris", description="Payment method"),
      *             @OA\Property(property="amount", type="number", format="float", example=50000, description="Cart payment amount")
      *         )
      *     ),
@@ -428,7 +428,7 @@ class PaymentGatewayController extends Controller
      *             @OA\Property(property="message", type="string", example="Payment initiated"),
      *             @OA\Property(property="status", type="string", example="pending"),
      *             @OA\Property(property="order_id", type="string", example="CART-123456"),
-     *             @OA\Property(property="qris_url", type="string", example="https://example.com/qr-code")
+     *             @OA\Property(property="payment_url", type="string", example="https://example.com/payment-link"),
      *         )
      *     ),
      *     @OA\Response(
@@ -441,6 +441,7 @@ class PaymentGatewayController extends Controller
      *     )
      * )
      */
+
 
      public function payForCart(Request $request)
      {
@@ -528,7 +529,7 @@ class PaymentGatewayController extends Controller
                  'message' => 'Payment initiated',
                  'status' => $charge->transaction_status ?? 'pending',
                  'order_id' => $order_id,
-                 'qris_url' => $paymentUrl,
+                 'payment_url' => $paymentUrl,
              ], 201);
      
          } catch (\Exception $e) {

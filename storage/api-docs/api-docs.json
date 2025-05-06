@@ -1795,7 +1795,8 @@
                                         "description": "Payment method",
                                         "type": "string",
                                         "enum": [
-                                            "qris"
+                                            "qris",
+                                            "link"
                                         ],
                                         "example": "qris"
                                     },
@@ -1829,6 +1830,10 @@
                                         "order_id": {
                                             "type": "string",
                                             "example": "MEMB-123456"
+                                        },
+                                        "payment_url": {
+                                            "type": "string",
+                                            "example": "https://example.com/payment-link"
                                         },
                                         "qris_url": {
                                             "type": "string",
@@ -1890,7 +1895,8 @@
                                         "description": "Payment method",
                                         "type": "string",
                                         "enum": [
-                                            "qris"
+                                            "qris",
+                                            "link"
                                         ],
                                         "example": "qris"
                                     },
@@ -1924,6 +1930,10 @@
                                         "order_id": {
                                             "type": "string",
                                             "example": "CART-123456"
+                                        },
+                                        "payment_url": {
+                                            "type": "string",
+                                            "example": "https://example.com/payment-link"
                                         },
                                         "qris_url": {
                                             "type": "string",
