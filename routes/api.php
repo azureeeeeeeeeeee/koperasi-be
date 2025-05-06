@@ -69,6 +69,7 @@ Route::prefix('cart')->group(function () {
     Route::post('/{id_user}/product/{id_product}', [CartController::class, 'add_item_to_cart'])->name('cart.add_item');
     Route::put('/{id_user}/product/{id_product}', [CartController::class, 'update'])->name('cart.update_item');
     Route::delete('/{id_user}/product/{id_product}', [CartController::class, 'destroy'])->name('cart.remove_item');
+    Route::put('/{id_cart}/status', [CartController::class, 'update_status_barang'])->name('cart.update_status');
 });
 
 // Cart Routes (Guest Users)

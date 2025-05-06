@@ -727,4 +727,28 @@ class CartController extends Controller
             'cart' => $cart->load('products.category')
         ], 200);
     }
+
+    public function update_status_barang(Request $request, int $id_cart)
+    {
+        $cart = Cart::find($id_cart);
+
+        if (!$cart) {
+            return response()->json([
+                'message' => 'Cart not found'
+            ], 404);
+        }
+
+        $fields = $request->validate([
+            'status_barang' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
+        ]);
+
+        $cart->status_barang = $fields['status_barang'];
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Status barang updated successfully',
+            'cart' => $cart
+        ]);
+
+    }
 }
