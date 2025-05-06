@@ -301,6 +301,37 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * GET /api/product/search
+     * 
+     * @OA\Get(
+     *     path="/api/product/search",
+     *     summary="Cari produk berdasarkan nama atau kategori",
+     *     tags={"Product"},
+     *     @OA\Parameter(
+     *         name="name",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Hasil pencarian produk",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Hasil pencarian produk"),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
+     *         )
+     *     ),
+     * )
+     */
     public function index(Request $request)
     {
         try {
@@ -343,13 +374,15 @@ class ProductController extends Controller
         }
     }
 
+
+
     /**
      * Handle exceptions and return a JSON response.
      *
      * @param \Exception $e
      * @return \Illuminate\Http\JsonResponse
      */
-
+    
     private function handleException(\Exception $e)
     {
         return response()->json([
