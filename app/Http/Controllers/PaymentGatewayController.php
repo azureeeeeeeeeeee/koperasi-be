@@ -13,7 +13,7 @@ class PaymentGatewayController extends Controller
     
     /**
      * @OA\Post(
-     *     path="/create-payment",
+     *     path="/api/payment/create-payment",
      *     summary="Create a new payment",
      *     tags={"Payment Gateway"},
      *     @OA\RequestBody(
@@ -119,7 +119,7 @@ class PaymentGatewayController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/check-payment-status",
+     *     path="/api/payment/check-payment-status",
      *     summary="Check the status of a payment",
      *     tags={"Payment Gateway"},
      *     @OA\RequestBody(
@@ -215,7 +215,7 @@ class PaymentGatewayController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/pay-for-membership",
+     *     path="/api/payment/pay-for-membership",
      *     summary="Pay for membership",
      *     tags={"Payment Gateway"},
      *     @OA\RequestBody(
@@ -331,7 +331,7 @@ class PaymentGatewayController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/pay-for-cart",
+     *     path="/api/payment/pay-for-cart",
      *     summary="Pay for a cart",
      *     tags={"Payment Gateway"},
      *     @OA\RequestBody(

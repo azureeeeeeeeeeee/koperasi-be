@@ -15,7 +15,7 @@ class EmailController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/send-otp",
+     *     path="/api/email/send-otp",
      *     summary="Send OTP to user's email",
      *     tags={"Email"},
      *     @OA\RequestBody(
@@ -66,7 +66,7 @@ class EmailController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/reset-password-with-otp",
+     *     path="/api/email/reset-password-with-otp",
      *     summary="Reset password using OTP",
      *     tags={"Email"},
      *     @OA\RequestBody(

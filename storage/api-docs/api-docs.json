@@ -1409,13 +1409,13 @@
                 ]
             }
         },
-        "/send-otp": {
+        "/api/email/send-otp": {
             "post": {
                 "tags": [
                     "Email"
                 ],
                 "summary": "Send OTP to user's email",
-                "operationId": "5288261580b5a5ff1ccacb763137f729",
+                "operationId": "d8000265181f6e7d972400782a521bda",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1472,13 +1472,13 @@
                 }
             }
         },
-        "/reset-password-with-otp": {
+        "/api/email/reset-password-with-otp": {
             "post": {
                 "tags": [
                     "Email"
                 ],
                 "summary": "Reset password using OTP",
-                "operationId": "558937275473a28e89eb21c007a4c0a1",
+                "operationId": "17a493a5a4a5f5362e777d7f5b00f9e5",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1568,13 +1568,13 @@
                 }
             }
         },
-        "/create-payment": {
+        "/api/payment/create-payment": {
             "post": {
                 "tags": [
                     "Payment Gateway"
                 ],
                 "summary": "Create a new payment",
-                "operationId": "adee2709da37538f6f907c6007b15fbe",
+                "operationId": "645c1dff4961fbac6b50d2ee13e828dc",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1656,13 +1656,13 @@
                 }
             }
         },
-        "/check-payment-status": {
+        "/api/payment/check-payment-status": {
             "post": {
                 "tags": [
                     "Payment Gateway"
                 ],
                 "summary": "Check the status of a payment",
-                "operationId": "be3dc4469bc7f8ff936be52914e1eb3c",
+                "operationId": "98920ac12e0e180f0407ebf825f8ef17",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1735,13 +1735,13 @@
                 }
             }
         },
-        "/pay-for-membership": {
+        "/api/payment/pay-for-membership": {
             "post": {
                 "tags": [
                     "Payment Gateway"
                 ],
                 "summary": "Pay for membership",
-                "operationId": "d0673530e9493d1705a8326950e31bb9",
+                "operationId": "f763a5416f7e3fff304beaff58d433a7",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1830,13 +1830,13 @@
                 }
             }
         },
-        "/pay-for-cart": {
+        "/api/payment/pay-for-cart": {
             "post": {
                 "tags": [
                     "Payment Gateway"
                 ],
                 "summary": "Pay for a cart",
-                "operationId": "5916f424983aa45f1f83e7cb8c39f752",
+                "operationId": "de2a51996761b12dbd5b6fcc2ce1787e",
                 "requestBody": {
                     "required": true,
                     "content": {
