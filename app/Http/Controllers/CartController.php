@@ -382,7 +382,35 @@ class CartController extends Controller
     }
 
 
+    public function update_status_barang(Request $request, string $id_user ,int $id_cart)
+    {
+        // Validasi input status
+        $fields = $request->validate([
+            'status' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
+        ]);
 
+        // Cari cart berdasarkan id_cart dan id_user
+        $cart = Cart::where('id', $id_cart)
+                    ->where('user_id', $id_user)
+                    ->first();
+
+        // Jika cart tidak ditemukan, kembalikan response 404
+        if (!$cart) {
+            return response()->json([
+                'message' => 'Cart not found'
+            ], 404);
+        }
+
+        // Update status barang
+        $cart->status_barang = $fields['status'];
+        $cart->save();
+
+        // Kembalikan response sukses
+        return response()->json([
+            'message' => 'Status barang berhasil diperbarui',
+            'cart' => $cart
+        ], 200);
+    }
 
 
 
@@ -728,27 +756,5 @@ class CartController extends Controller
         ], 200);
     }
 
-    public function update_status_barang(Request $request, int $id_cart)
-    {
-        $cart = Cart::find($id_cart);
-
-        if (!$cart) {
-            return response()->json([
-                'message' => 'Cart not found'
-            ], 404);
-        }
-
-        $fields = $request->validate([
-            'status_barang' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
-        ]);
-
-        $cart->status_barang = $fields['status_barang'];
-        $cart->save();
-
-        return response()->json([
-            'message' => 'Status barang updated successfully',
-            'cart' => $cart
-        ]);
-
-    }
+    
 }
