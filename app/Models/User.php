@@ -25,7 +25,7 @@ class User extends Authenticatable
         'tipe',
         'status_keanggotaan',
         'saldo',
-        'is_verified',
+        // 'is_verified',
     ];
 
     /**

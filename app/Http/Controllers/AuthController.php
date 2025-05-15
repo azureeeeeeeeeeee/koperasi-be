@@ -46,35 +46,35 @@ class AuthController extends Controller
         }
 
         // Check if user is verified
-        if (!$user->is_verified) {
-            // Check if there's a valid OTP
-            $existingOtp = Otp::where('user_id', $user->id)
-                ->where('expires_at', '>', Carbon::now())
-                ->first();
+        // if (!$user->is_verified) {
+        //     // Check if there's a valid OTP
+        //     $existingOtp = Otp::where('user_id', $user->id)
+        //         ->where('expires_at', '>', Carbon::now())
+        //         ->first();
 
-            if (!$existingOtp) {
-                // Generate new verification token if no valid OTP exists
-                $verificationToken = Str::uuid();
+        //     if (!$existingOtp) {
+        //         // Generate new verification token if no valid OTP exists
+        //         $verificationToken = Str::uuid();
                 
-                Otp::create([
-                    'user_id' => $user->id,
-                    'otp' => $verificationToken,
-                    'expires_at' => Carbon::now()->addHours(24),
-                ]);
+        //         Otp::create([
+        //             'user_id' => $user->id,
+        //             'otp' => $verificationToken,
+        //             'expires_at' => Carbon::now()->addHours(24),
+        //         ]);
                 
-                try {
-                    // Send verification email
-                    Mail::to($user->email)->send(new OtpMail($verificationToken));
-                } catch (\Exception $e) {
-                    Log::error('Failed to send verification email: ' . $e->getMessage());
-                }
-            }
+        //         try {
+        //             // Send verification email
+        //             Mail::to($user->email)->send(new OtpMail($verificationToken));
+        //         } catch (\Exception $e) {
+        //             Log::error('Failed to send verification email: ' . $e->getMessage());
+        //         }
+        //     }
             
-            return response()->json([
-                "message" => "Akun belum diverifikasi. Link verifikasi telah dikirim ke email Anda.",
-                "redirect" => route('auth.verifyOtpPage')
-            ], 403);
-        }
+        //     return response()->json([
+        //         "message" => "Akun belum diverifikasi. Link verifikasi telah dikirim ke email Anda.",
+        //         "redirect" => route('auth.verifyOtpPage')
+        //     ], 403);
+        // }
 
         $token = $user->createToken($user->email)->plainTextToken;
 

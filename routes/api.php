@@ -63,7 +63,7 @@ Route::prefix('product')->group(function () {
 });
 
 // Cart Routes (Authenticated Users Only)
-Route::prefix('cart')->group(function () {
+Route::prefix('cart')->middleware('auth:sanctum')->group(function () {
     Route::get('/', [CartController::class, 'index'])->name('cart.index');
     Route::get('/{id_user}', [CartController::class, 'show'])->name('cart.show');
     Route::post('/{id_user}/product/{id_product}', [CartController::class, 'add_item_to_cart'])->name('cart.add_item');
