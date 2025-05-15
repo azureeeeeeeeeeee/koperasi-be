@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->notNull();
             $table->decimal('potongan', 6, 2)->notNull();
+            $table->integer('keuntungan')->default(0);
             $table->timestamps();
         });
     }

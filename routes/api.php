@@ -83,10 +83,10 @@ Route::prefix('guest/cart')->group(function () {
 
 // Payment Gateway Routes
 Route::prefix('payment')->group(function () {
-    Route::post('/create', [PaymentGatewayController::class, 'createPayment'])->name('payment.create');
-    Route::get('/status', [PaymentGatewayController::class, 'checkPaymentStatus'])->name('payment.status');
-    Route::post('/cart_payment', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
-    Route::post('/membership', [PaymentGatewayController::class, 'payForMembership'])->name('payment.payForMembership');
+    Route::post('/create-payment', [PaymentGatewayController::class, 'createPayment'])->name('payment.create');
+    Route::get('/check-payment-status', [PaymentGatewayController::class, 'checkPaymentStatus'])->name('payment.status');
+    Route::post('/pay-for-cart', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
+    Route::post('/pay-for-membership', [PaymentGatewayController::class, 'payForMembership'])->name('payment.payForMembership');
 });
 
 // Email Routes

@@ -339,17 +339,17 @@ class ProductController extends Controller
 
             if ($request->filled('name')) {
                 $searchName = trim(str_replace('-', ' ', $request->input('name')));
-                $query->where(function($q) use ($searchName) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchName) . '%'])
-                    ->orWhereRaw('LOWER(REPLACE(name, " ", "-")) LIKE ?', ['%' . strtolower(str_replace(' ', '-', $searchName)) . '%']);
+                $query->where(function ($q) use ($searchName) {
+                    $q->where('name', 'LIKE', '%' . $searchName . '%')
+                      ->orWhere('name', 'LIKE', '%' . str_replace(' ', '-', $searchName) . '%');
                 });
             }
 
             if ($request->filled('category')) {
                 $searchCategory = trim(str_replace('-', ' ', $request->input('category')));
-                $query->whereHas('category', function($q) use ($searchCategory) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($searchCategory) . '%'])
-                    ->orWhereRaw('LOWER(REPLACE(name, " ", "-")) LIKE ?', ['%' . strtolower(str_replace(' ', '-', $searchCategory)) . '%']);
+                $query->whereHas('category', function ($q) use ($searchCategory) {
+                    $q->where('name', 'LIKE', '%' . $searchCategory . '%')
+                      ->orWhere('name', 'LIKE', '%' . str_replace(' ', '-', $searchCategory) . '%');
                 });
             }
 
