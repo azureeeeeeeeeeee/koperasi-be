@@ -100,7 +100,7 @@ class CartController extends Controller
     public function add_item_to_cart(Request $request, int $id_user, int $id_product)
     {
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
 
         Gate::authorize('create', $cart);
@@ -187,7 +187,7 @@ class CartController extends Controller
     public function show(Request $requesst, int $id_user)
     {
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
 
         Gate::authorize('view', $cart);
@@ -251,7 +251,7 @@ class CartController extends Controller
     public function update(Request $request, int $id_user, int $id_product)
     {
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
 
         Gate::authorize('update', $cart);
@@ -338,7 +338,7 @@ class CartController extends Controller
     {
 
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
         Gate::authorize('delete', $cart);
         $product = Product::with(['category'])->find($id_product);
@@ -350,7 +350,7 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('user_id', $id_user)
-                ->where('sudah_bayar', false)
+                ->where('sudah_bayar', 0)
                 ->firstOrFail();
 
         $existing = $cart->products()->where('product_id', $id_product)->first();
@@ -455,12 +455,12 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('user_id', $id_user)
-                    ->where('sudah_bayar', true)
+                    ->where('sudah_bayar', 0)
                     ->first();
 
         if (!$cart) {
             $unpaidCart = Cart::where('user_id', $id_user)
-                            ->where('sudah_bayar', false)
+                            ->where('sudah_bayar', 0)
                             ->exists();
 
             if ($unpaidCart) {
@@ -521,7 +521,7 @@ class CartController extends Controller
     public function guest_show(Request $requesst, string $guest_id)
     {
         $cart = Cart::firstOrCreate(
-            ['guest_id' => $guest_id, 'sudah_bayar' => false],
+            ['guest_id' => $guest_id, 'sudah_bayar' => 0],
         );
 
         $cart->load('products.category');
@@ -586,7 +586,7 @@ class CartController extends Controller
     public function guest_add_item(Request $request, string $guest_id, int $id_product)
     {
         $cart = Cart::firstOrCreate(
-            ['guest_id' => $guest_id, 'sudah_bayar' => false],
+            ['guest_id' => $guest_id, 'sudah_bayar' => 0],
         );
 
         $fields = $request->validate([
@@ -698,7 +698,7 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('guest_id', $guest_id)
-                    ->where('sudah_bayar', false)
+                    ->where('sudah_bayar', 0)
                     ->first();
 
         if (!$cart) {
@@ -782,7 +782,7 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('guest_id', $guest_id)
-                    ->where('sudah_bayar', false)
+                    ->where('sudah_bayar', 0)
                     ->first();
 
         if (!$cart) {
@@ -884,12 +884,12 @@ class CartController extends Controller
         ]);
 
         $cart = Cart::where('guest_id', $guest_id)
-                    ->where('sudah_bayar', true)
+                    ->where('sudah_bayar', 1)
                     ->first();
 
         if (!$cart) {
             $unpaidCart = Cart::where('guest_id', $guest_id)
-                          ->where('sudah_bayar', false)
+                          ->where('sudah_bayar', 0)
                           ->exists();
             if ($unpaidCart) {
             return response()->json([

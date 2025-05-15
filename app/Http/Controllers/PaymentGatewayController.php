@@ -247,6 +247,7 @@ class PaymentGatewayController extends Controller
                     $cart = \App\Models\Cart::where('id', $payment->cart_id)->first();
                     if ($cart && $cart->status !== 'Paid') {
                         $cart->status = 'Paid';
+                        $cart->sudah_bayar = 1;
                         $cart->save();
                     }
                 }
