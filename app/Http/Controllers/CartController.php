@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -382,16 +383,24 @@ class CartController extends Controller
     }
 
 
-    public function update_status_barang(Request $request, string $id_user ,int $id_cart)
+    public function update_status_barang(Request $request, string $id_user)
     {
         // Validasi input status
         $fields = $request->validate([
             'status' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
         ]);
 
-        // Cari cart berdasarkan id_cart dan id_user
-        $cart = Cart::where('id', $id_cart)
-                    ->where('user_id', $id_user)
+        // Periksa apakah user dengan id_user ada
+        $userExists = User::where('id', $id_user)->exists();
+        if (!$userExists) {
+            return response()->json([
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        // Cari cart berdasarkan id_user dan sudah_bayar = true
+        $cart = Cart::where('user_id', $id_user)
+                    ->where('sudah_bayar', true)
                     ->first();
 
         // Jika cart tidak ditemukan, kembalikan response 404
