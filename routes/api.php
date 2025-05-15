@@ -78,6 +78,7 @@ Route::prefix('guest/cart')->group(function () {
     Route::post('/{guest_id}/product/{id_product}', [CartController::class, 'guest_add_item'])->name('cart.guest.add_item');
     Route::put('/{guest_id}/product/{id_product}', [CartController::class, 'guest_update_item'])->name('cart.guest.update_item');
     Route::delete('/{guest_id}/product/{id_product}', [CartController::class, 'guest_remove_item'])->name('cart.guest.remove_item');
+    Route::put('/{guest_id}/status', [CartController::class, 'guest_update_status'])->name('cart.guest_update_status');
 });
 
 // Payment Gateway Routes
