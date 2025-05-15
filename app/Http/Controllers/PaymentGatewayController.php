@@ -543,4 +543,116 @@ class PaymentGatewayController extends Controller
      }
      
 
+    public function topUp(Request $request)
+    {
+        // Midtrans setup
+        \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        \Midtrans\Config::$isProduction = false;
+        \Midtrans\Config::$isSanitized = true;
+        \Midtrans\Config::$is3ds = true;
+
+        // Validasi input
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'payment_method' => 'required|string|in:qris,link',
+            'amount' => 'required|numeric|min:1000',
+        ]);
+
+        // Ambil data user
+        $user = \App\Models\User::find($validated['user_id']);
+
+        // Periksa apakah user bertipe "pengguna"
+        if ($user->tipe !== 'pengguna') {
+            return response()->json([
+                'error' => 'Top-up hanya tersedia untuk akun bertipe pengguna'
+            ], 403);
+        }
+
+        // Generate unique order_id
+        $order_id = 'TOPUP-' . uniqid();
+
+        try {
+            $charge = null;
+            $paymentUrl = null;
+
+            if ($validated['payment_method'] === 'qris') {
+                // Gunakan Core API untuk QRIS
+                $params = [
+                    'payment_type' => 'qris',
+                    'transaction_details' => [
+                        'order_id' => $order_id,
+                        'gross_amount' => $validated['amount'],
+                    ],
+                    'customer_details' => [
+                        'first_name' => explode(' ', $user->fullname)[0],
+                        'last_name' => explode(' ', $user->fullname)[1] ?? '',
+                        'email' => $user->email,
+                    ]
+                ];
+
+                $charge = \Midtrans\CoreApi::charge($params);
+
+                // Ambil URL QR dari actions
+                foreach ($charge->actions ?? [] as $action) {
+                    if ($action->name === 'generate-qr-code') {
+                        $paymentUrl = $action->url;
+                        break;
+                    }
+                }
+            } else {
+                // Gunakan Snap API untuk metode "link"
+                $params = [
+                    'transaction_details' => [
+                        'order_id' => $order_id,
+                        'gross_amount' => $validated['amount'],
+                    ],
+                    'customer_details' => [
+                        'first_name' => explode(' ', $user->fullname)[0],
+                        'last_name' => explode(' ', $user->fullname)[1] ?? '',
+                        'email' => $user->email,
+                    ],
+                ];
+
+                $snapUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
+                $paymentUrl = $snapUrl;
+
+                $charge = (object)[
+                    'transaction_id' => uniqid('txn_'),
+                    'transaction_status' => 'pending',
+                ];
+            }
+
+            // Simpan data pembayaran ke database
+            \App\Models\PaymentGateway::create([
+                'transaction_id' => $charge->transaction_id,
+                'order_id' => $order_id,
+                'user_id' => $user->id,
+                'payment_method' => $validated['payment_method'],
+                'payment_status' => $charge->transaction_status,
+                'payment_date' => now(),
+                'amount' => $validated['amount'],
+            ]);
+
+            // Tambahkan saldo jika pembayaran berhasil
+            if (in_array($charge->transaction_status, ['settlement', 'capture'])) {
+                $user->saldo += $validated['amount'];
+                $user->save();
+            }
+
+            return response()->json([
+                'message' => 'Top-up initiated',
+                'status' => $charge->transaction_status ?? 'pending',
+                'order_id' => $order_id,
+                'payment_url' => $paymentUrl,
+            ], 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Top-up error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to process top-up',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
