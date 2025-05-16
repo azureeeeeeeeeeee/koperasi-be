@@ -89,5 +89,6 @@ Route::prefix('payment')->group(function () {
 // Email Routes
 Route::prefix('email')->group(function () {
     Route::post('/send-otp', [EmailController::class, 'sendOtp'])->name('email.sendOtp');
+    Route::post('/verify-otp', [EmailController::class, 'verifyOtp'])->name('email.verifyOtp');
     Route::post('/reset-password', [EmailController::class, 'resetPasswordWithOtp'])->name('email.resetPasswordWithOtp');
 });
