@@ -109,7 +109,6 @@ class EmailController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
-            'otp' => 'required|string',
             'new_password' => 'required|string|min:6|confirmed'
         ]);
 
@@ -117,12 +116,11 @@ class EmailController extends Controller
             return response()->json(['error' => $validator->errors()->first()], 400);
         }
 
-        $otpRecord = DB::table('password_reset_tokens')
+        $email_check_req = DB::table('password_reset_tokens')
             ->where('email', $request->email)
-            ->where('token', $request->otp)
             ->first();
 
-        if (!$otpRecord || Carbon::parse($otpRecord->created_at)->addMinutes(10)->isPast()) {
+        if (!$email_check_req || Carbon::parse($email_check_req->created_at)->addMinutes(10)->isPast()) {
             return response()->json(['error' => 'Invalid or expired OTP'], 400);
         }
 
