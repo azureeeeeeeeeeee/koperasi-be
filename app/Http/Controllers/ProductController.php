@@ -18,6 +18,8 @@ use OpenApi\Annotations as OA;
  *     @OA\Property(property="id", type="integer", example=1),
  *     @OA\Property(property="name", type="string", example="Produk A"),
  *     @OA\Property(property="price", type="number", format="float", example=10000),
+ *     @OA\Property(property="description", type="string", example="Deskripsi produk A"),
+ *     @OA\Property(property="image_url", type="string", example="https://placehold.co/600x400"),
  *     @OA\Property(property="stock", type="integer", example=15),
  *     @OA\Property(property="category_id", type="integer", example=2),
  *     @OA\Property(property="user_id", type="integer", example=5),
@@ -130,9 +132,11 @@ class ProductController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name","price","stock","category"},
+     *             required={"name","price","stock","category", "image_url", "description"},
      *             @OA\Property(property="name", type="string", example="Produk A"),
      *             @OA\Property(property="price", type="number", format="float", example=10000),
+     *             @OA\Property(property="image_url", type="string", example="https://placehold.co/600x400"),
+     *             @OA\Property(property="description", type="string", example="Deskripsi produk A"),
      *             @OA\Property(property="stock", type="integer", example=15),
      *             @OA\Property(property="category", type="string", example="Elektronik")
      *         )
@@ -157,6 +161,8 @@ class ProductController extends Controller
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
+                'image_url' => 'required|string',
+                'description' => 'required|string|max:100',
                 'category' => 'required|string|max:30'
             ]);
 
@@ -194,11 +200,13 @@ class ProductController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name","price","stock","category"},
+     *             required={"name","price","stock","category", "description"},
      *             @OA\Property(property="name", type="string", example="Produk A"),
      *             @OA\Property(property="price", type="number", example=10000),
      *             @OA\Property(property="stock", type="integer", example=15),
-     *             @OA\Property(property="category", type="string", example="Elektronik")
+     *             @OA\Property(property="category", type="string", example="Elektronik"),
+     *            @OA\Property(property="image_url", type="string", example="https://placehold.co/600x400"),
+     *            @OA\Property(property="description", type="string", example="Deskripsi produk A"),
      *         )
      *     ),
      *     @OA\Response(
@@ -233,6 +241,8 @@ class ProductController extends Controller
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
                 'category' => 'required|string|min:0',
+                'description' => 'required|string|min:0|max:100',
+                'image_url' => 'nullable|string',
             ]);
 
             $fields['user_id'] = $request->user()->id;

@@ -2341,7 +2341,9 @@
                                     "name",
                                     "price",
                                     "stock",
-                                    "category"
+                                    "category",
+                                    "image_url",
+                                    "description"
                                 ],
                                 "properties": {
                                     "name": {
@@ -2352,6 +2354,14 @@
                                         "type": "number",
                                         "format": "float",
                                         "example": 10000
+                                    },
+                                    "image_url": {
+                                        "type": "string",
+                                        "example": "https://placehold.co/600x400"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Deskripsi produk A"
                                     },
                                     "stock": {
                                         "type": "integer",
@@ -2472,7 +2482,8 @@
                                     "name",
                                     "price",
                                     "stock",
-                                    "category"
+                                    "category",
+                                    "description"
                                 ],
                                 "properties": {
                                     "name": {
@@ -2490,6 +2501,14 @@
                                     "category": {
                                         "type": "string",
                                         "example": "Elektronik"
+                                    },
+                                    "image_url": {
+                                        "type": "string",
+                                        "example": "https://placehold.co/600x400"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "example": "Deskripsi produk A"
                                     }
                                 },
                                 "type": "object"
@@ -2724,6 +2743,14 @@
                         "type": "number",
                         "format": "float",
                         "example": 10000
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Deskripsi produk A"
+                    },
+                    "image_url": {
+                        "type": "string",
+                        "example": "https://placehold.co/600x400"
                     },
                     "stock": {
                         "type": "integer",

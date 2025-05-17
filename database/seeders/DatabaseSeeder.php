@@ -27,14 +27,14 @@ class DatabaseSeeder extends Seeder
             'status_keanggotaan' => 'bukan anggota',
         ]);
 
-        // User::factory()->create([
-        //     'fullname' => 'User Pengguna',
-        //     'email' => 'pengguna@staff.itk.ac.id',
-        //     'password' => Hash::make('pengguna321321321'),
-        //     'tipe' => 'pengguna',
-        //     'is_verified' => true,
-        //     'status_keanggotaan' => 'tidak aktif',
-        // ]);
+        User::factory()->create([
+            'fullname' => 'User Pengguna',
+            'email' => 'pengguna@staff.itk.ac.id',
+            'password' => Hash::make('pengguna321321321'),
+            'tipe' => 'pengguna',
+            // 'is_verified' => true,
+            'status_keanggotaan' => 'tidak aktif',
+        ]);
 
         User::factory()->create([
             'fullname' => 'Tatak Adi',
