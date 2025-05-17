@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\User;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -99,7 +100,7 @@ class CartController extends Controller
     public function add_item_to_cart(Request $request, int $id_user, int $id_product)
     {
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
 
         Gate::authorize('create', $cart);
@@ -186,7 +187,7 @@ class CartController extends Controller
     public function show(Request $requesst, int $id_user)
     {
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
 
         Gate::authorize('view', $cart);
@@ -250,7 +251,7 @@ class CartController extends Controller
     public function update(Request $request, int $id_user, int $id_product)
     {
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
 
         Gate::authorize('update', $cart);
@@ -337,7 +338,7 @@ class CartController extends Controller
     {
 
         $cart = Cart::firstOrCreate(
-            ['user_id' => $id_user, 'sudah_bayar' => false],
+            ['user_id' => $id_user, 'sudah_bayar' => 0],
         );
         Gate::authorize('delete', $cart);
         $product = Product::with(['category'])->find($id_product);
@@ -349,7 +350,7 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('user_id', $id_user)
-                ->where('sudah_bayar', false)
+                ->where('sudah_bayar', 0)
                 ->firstOrFail();
 
         $existing = $cart->products()->where('product_id', $id_product)->first();
@@ -381,11 +382,106 @@ class CartController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/cart/{id_user}/update-status",
+     *     summary="Update the status of a cart",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id_user",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the user whose cart status will be updated",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="string",
+     *                 description="The new status of the cart",
+     *                 enum={"menunggu pegawai", "akan dikirim", "sudah dibooking", "diterima pembeli"},
+     *                 example="akan dikirim"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cart status updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Status barang berhasil diperbarui"),
+     *             @OA\Property(property="cart", ref="#/components/schemas/Cart")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Cart has not been paid yet",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Cart has not been paid yet")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User or cart not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="User not found or Cart not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
 
+    public function update_status_barang(Request $request, string $id_user)
+    {
+        $fields = $request->validate([
+            'status' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
+        ]);
 
+        $userExists = User::where('id', $id_user)->exists();
+        if (!$userExists) {
+            return response()->json([
+                'message' => 'User not found'
+            ], 404);
+        }
 
+        $cart = Cart::where('user_id', $id_user)
+                    ->where('sudah_bayar', 0)
+                    ->first();
 
+        if (!$cart) {
+            $unpaidCart = Cart::where('user_id', $id_user)
+                            ->where('sudah_bayar', 0)
+                            ->exists();
 
+            if ($unpaidCart) {
+                return response()->json([
+                    'message' => 'Cart has not been paid yet'
+                ], 400);
+            }
+
+            return response()->json([
+                'message' => 'Cart not found'
+            ], 404);
+        }
+
+        $cart->status_barang = $fields['status'];
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Status barang berhasil diperbarui',
+            'cart' => $cart
+        ], 200);
+    }
 
     /**
      * @OA\Get(
@@ -425,7 +521,7 @@ class CartController extends Controller
     public function guest_show(Request $requesst, string $guest_id)
     {
         $cart = Cart::firstOrCreate(
-            ['guest_id' => $guest_id, 'sudah_bayar' => false],
+            ['guest_id' => $guest_id, 'sudah_bayar' => 0],
         );
 
         $cart->load('products.category');
@@ -448,11 +544,6 @@ class CartController extends Controller
             'items' => $items,
         ]);
     }
-
-
-
-
-
 
 
     /**
@@ -495,7 +586,7 @@ class CartController extends Controller
     public function guest_add_item(Request $request, string $guest_id, int $id_product)
     {
         $cart = Cart::firstOrCreate(
-            ['guest_id' => $guest_id, 'sudah_bayar' => false],
+            ['guest_id' => $guest_id, 'sudah_bayar' => 0],
         );
 
         $fields = $request->validate([
@@ -607,7 +698,7 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('guest_id', $guest_id)
-                    ->where('sudah_bayar', false)
+                    ->where('sudah_bayar', 0)
                     ->first();
 
         if (!$cart) {
@@ -691,7 +782,7 @@ class CartController extends Controller
         }
 
         $cart = Cart::where('guest_id', $guest_id)
-                    ->where('sudah_bayar', false)
+                    ->where('sudah_bayar', 0)
                     ->first();
 
         if (!$cart) {
@@ -727,4 +818,97 @@ class CartController extends Controller
             'cart' => $cart->load('products.category')
         ], 200);
     }
+
+    /**
+     * @OA\Put(
+     *     path="/api/cart/guest/{guest_id}/update-status",
+     *     summary="Update the status of a guest cart",
+     *     tags={"Cart"},
+     *     @OA\Parameter(
+     *         name="guest_id",
+     *         in="path",
+     *         required=true,
+     *         description="Guest user identifier",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="string",
+     *                 description="The new status of the cart",
+     *                 enum={"menunggu pegawai", "akan dikirim", "sudah dibooking", "diterima pembeli"},
+     *                 example="akan dikirim"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cart status updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Status barang berhasil diperbarui"),
+     *             @OA\Property(property="cart", ref="#/components/schemas/Cart")
+     *         )
+     *     ),
+     * 
+     *      @OA\Response(
+     *         response=400,
+     *         description="Cart has not been paid yet",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Cart has not been paid yet")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Cart not found",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Cart not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="The given data was invalid."),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     )
+     * )
+     */
+    public function guest_update_status(Request $request, string $guest_id)
+    {
+        $fields = $request->validate([
+            'status' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
+        ]);
+
+        $cart = Cart::where('guest_id', $guest_id)
+                    ->where('sudah_bayar', 1)
+                    ->first();
+
+        if (!$cart) {
+            $unpaidCart = Cart::where('guest_id', $guest_id)
+                          ->where('sudah_bayar', 0)
+                          ->exists();
+            if ($unpaidCart) {
+            return response()->json([
+                'message' => 'Cart has not been paid yet'
+            ], 400);
+            }
+            
+            return response()->json([
+                'message' => 'Cart not found'
+            ], 404);
+        }
+
+        $cart->status_barang = $fields['status'];
+        $cart->save();
+
+        return response()->json([
+            'message' => 'Status barang berhasil diperbarui',
+            'cart' => $cart
+        ], 200);
+    }
+    
 }

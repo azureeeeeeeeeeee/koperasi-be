@@ -100,6 +100,7 @@ class ProductController extends Controller
     {
         try {
             $product = Product::with(['category', 'user'])->find($id);
+            
 
             if (!$product) {
                 return response()->json([
@@ -301,12 +302,87 @@ class ProductController extends Controller
     }
 
     /**
+     * GET /api/product/search
+     * 
+     * @OA\Get(
+     *     path="/api/product/search",
+     *     summary="Cari produk berdasarkan nama atau kategori",
+     *     tags={"Product"},
+     *     @OA\Parameter(
+     *         name="name",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Hasil pencarian produk",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Hasil pencarian produk"),
+     *             @OA\Property(property="data", type="array", @OA\Items(ref="#/components/schemas/Product"))
+     *         )
+     *     ),
+     * )
+     */
+    public function index(Request $request)
+    {
+        try {
+            $query = Product::with(['category', 'user']);
+
+            if ($request->filled('name')) {
+                $searchName = trim(str_replace('-', ' ', $request->input('name')));
+                $query->where(function ($q) use ($searchName) {
+                    $q->where('name', 'LIKE', '%' . $searchName . '%')
+                      ->orWhere('name', 'LIKE', '%' . str_replace(' ', '-', $searchName) . '%');
+                });
+            }
+
+            if ($request->filled('category')) {
+                $searchCategory = trim(str_replace('-', ' ', $request->input('category')));
+                $query->whereHas('category', function ($q) use ($searchCategory) {
+                    $q->where('name', 'LIKE', '%' . $searchCategory . '%')
+                      ->orWhere('name', 'LIKE', '%' . str_replace(' ', '-', $searchCategory) . '%');
+                });
+            }
+
+            $products = $query->get()->map(function ($product) {
+                $discount = $product->category->potongan ?? 0;
+                $finalPrice = $product->price + ($product->price * ($discount / 100));
+                
+                $product->final_price = $finalPrice;
+                return $product;
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => $request->anyFilled(['name', 'category'])
+                    ? 'Hasil pencarian produk'
+                    : 'Daftar semua produk',
+                'data' => $products
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->handleException($e);
+        }
+    }
+
+
+
+    /**
      * Handle exceptions and return a JSON response.
      *
      * @param \Exception $e
      * @return \Illuminate\Http\JsonResponse
      */
-
+    
     private function handleException(\Exception $e)
     {
         return response()->json([

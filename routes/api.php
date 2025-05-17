@@ -35,13 +35,12 @@ Route::prefix('auth')->middleware('api')->group(function () {
 });
 
 // Admin Routes
-Route::prefix('admin')->group(function () {
-    Route::post('/user', [AdminController::class, 'create_pengguna'])->name('admin.create.pengguna')->middleware('auth:sanctum');
-    Route::delete('/user', [AdminController::class, 'delete_pengguna'])->name('admin.delete.pengguna')->middleware('auth:sanctum');
-    // Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
-    // Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout')->middleware('auth:sanctum');
-    // Route::post('/otp', [AuthController::class, 'sendOtp'])->name('auth.sendOtp');
-    // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::post('/user', [AdminController::class, 'create_pengguna'])->name('admin.create.pengguna');
+    Route::delete('/user/{id}', [AdminController::class, 'delete_pengguna'])->name('admin.delete.pengguna');
+    Route::get('/user', [AdminController::class, 'get_pengguna'])->name('admin.get.pengguna');
+    Route::get('/user/{id}', [AdminController::class, 'get_pengguna_by_id'])->name('admin.get.pengguna.by.id');
+    Route::put('/user/{id}', [AdminController::class, 'update_pengguna'])->name('admin.update.pengguna');
 });
 
 // Category Routes
@@ -56,7 +55,8 @@ Route::prefix('category')->group(function () {
 // Product Routes
 Route::prefix('product')->group(function () {
     Route::get('/', [ProductController::class, 'show_all_product'])->name('product.all');
-    Route::get('/{id}', [ProductController::class, 'get_product_data'])->name('product.single');
+    Route::get('/{id}', [ProductController::class, 'get_product_data'])->name('product.single')->whereNumber('id');
+    Route::get('/search', [ProductController::class, 'index'])->name('product.index');
     Route::post('/', [ProductController::class, 'create_product'])->name('product.create')->middleware('auth:sanctum');
     Route::put('/{id}', [ProductController::class, 'update_product_data'])->name('product.update')->middleware('auth:sanctum');
     Route::delete('/{id}', [ProductController::class, 'remove_product'])->name('product.delete')->middleware('auth:sanctum');
@@ -69,6 +69,7 @@ Route::prefix('cart')->middleware('auth:sanctum')->group(function () {
     Route::post('/{id_user}/product/{id_product}', [CartController::class, 'add_item_to_cart'])->name('cart.add_item');
     Route::put('/{id_user}/product/{id_product}', [CartController::class, 'update'])->name('cart.update_item');
     Route::delete('/{id_user}/product/{id_product}', [CartController::class, 'destroy'])->name('cart.remove_item');
+    Route::put('/{id_user}/status', [CartController::class, 'update_status_barang'])->name('cart.update_status');
 });
 
 // Cart Routes (Guest Users)
@@ -77,14 +78,16 @@ Route::prefix('guest/cart')->group(function () {
     Route::post('/{guest_id}/product/{id_product}', [CartController::class, 'guest_add_item'])->name('cart.guest.add_item');
     Route::put('/{guest_id}/product/{id_product}', [CartController::class, 'guest_update_item'])->name('cart.guest.update_item');
     Route::delete('/{guest_id}/product/{id_product}', [CartController::class, 'guest_remove_item'])->name('cart.guest.remove_item');
+    Route::put('/{guest_id}/status', [CartController::class, 'guest_update_status'])->name('cart.guest_update_status');
 });
 
 // Payment Gateway Routes
 Route::prefix('payment')->group(function () {
-    Route::post('/create', [PaymentGatewayController::class, 'createPayment'])->name('payment.create');
-    Route::get('/status', [PaymentGatewayController::class, 'checkPaymentStatus'])->name('payment.status');
-    Route::post('/cart_payment', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
-    Route::post('/membership', [PaymentGatewayController::class, 'payForMembership'])->name('payment.payForMembership');
+    Route::post('/create-payment', [PaymentGatewayController::class, 'createPayment'])->name('payment.create');
+    Route::get('/check-payment-status', [PaymentGatewayController::class, 'checkPaymentStatus'])->name('payment.status');
+    Route::post('/pay-for-cart', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
+    Route::post('/pay-for-membership', [PaymentGatewayController::class, 'payForMembership'])->name('payment.payForMembership');
+    Route::post('/pay-for-topup', [PaymentGatewayController::class, 'topup'])->name('payment.topup');
 });
 
 // Email Routes

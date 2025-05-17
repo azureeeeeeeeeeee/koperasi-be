@@ -23,22 +23,32 @@ class DatabaseSeeder extends Seeder
             'email' => 'testuser@gmail.com',
             'password' => Hash::make('test321321321'),
             'tipe' => 'admin',
-            'is_verified' => true,
+            // 'is_verified' => true,
             'status_keanggotaan' => 'bukan anggota',
         ]);
 
+        // User::factory()->create([
+        //     'fullname' => 'User Pengguna',
+        //     'email' => 'pengguna@staff.itk.ac.id',
+        //     'password' => Hash::make('pengguna321321321'),
+        //     'tipe' => 'pengguna',
+        //     'is_verified' => true,
+        //     'status_keanggotaan' => 'tidak aktif',
+        // ]);
+
         User::factory()->create([
-            'fullname' => 'User Pengguna',
-            'email' => 'pengguna@staff.itk.ac.id',
-            'password' => Hash::make('pengguna321321321'),
+            'fullname' => 'Tatak Adi',
+            'email' => 'tatakadi@staff.itk.ac.id',
+            'password' => Hash::make('tatak321321321'),
             'tipe' => 'pengguna',
-            'is_verified' => true,
-            'status_keanggotaan' => 'tidak aktif',
+            // 'is_verified' => true,
+            'status_keanggotaan' => 'aktif',
         ]);
 
         Category::create([
             'name' => 'makanan berat',
             'potongan' => 10.00,
+            'keuntungan' => 2000,
         ]);
 
         Product::create([
