@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Category;
+use App\Models\Config;
 use App\Models\Product;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -57,6 +58,11 @@ class DatabaseSeeder extends Seeder
             'stock' => 10,
             'category_id' => 1,
             'user_id' => 1,
+        ]);
+
+        Config::create([
+            'key' => 'iuran wajib',
+            'value' => '30000',
         ]);
     }
 }

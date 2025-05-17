@@ -102,5 +102,5 @@ Route::prefix('config')->group(function () {
     Route::get('/{id}', [ConfigController::class, 'show'])->name('config.show')->middleware('auth:sanctum');
     Route::post('/', [ConfigController::class, 'create'])->name('config.create')->middleware('auth:sanctum');
     Route::put('/{id}', [ConfigController::class, 'update'])->name('config.update')->middleware('auth:sanctum');
-    Route::delete('/{id}', [ConfigController::class, 'destroy'])->name('config.delete')->middleware('auth:sanctum');
+    Route::delete('/{id}', [ConfigController::class, 'delete'])->name('config.delete')->middleware('auth:sanctum');
 });

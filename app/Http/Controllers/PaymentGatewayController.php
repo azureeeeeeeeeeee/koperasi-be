@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Config as ModelsConfig;
 use Midtrans\Snap;
 use Midtrans\Config;
 use Midtrans\CoreApi;
@@ -317,11 +318,13 @@ class PaymentGatewayController extends Controller
          $validated = $request->validate([
              'user_id' => 'required|exists:users,id',
              'payment_method' => 'required|string|in:qris,link',
-             'amount' => 'required|numeric|min:10000',
          ]);
      
          // Get user
          $user = \App\Models\User::find($validated['user_id']);
+
+         $config = ModelsConfig::where('key', 'iuran wajib')->first();
+         $amount = $config ? (int) $config->value : 15000; 
      
          // Generate unique order_id
          $order_id = 'MEMB-' . uniqid();
@@ -335,7 +338,7 @@ class PaymentGatewayController extends Controller
                      'payment_type' => 'qris',
                      'transaction_details' => [
                          'order_id' => $order_id,
-                         'gross_amount' => $validated['amount'],
+                         'gross_amount' => $amount,
                      ],
                      'customer_details' => [
                          'first_name' => explode(' ', $user->fullname)[0],
@@ -358,7 +361,7 @@ class PaymentGatewayController extends Controller
                  $params = [
                      'transaction_details' => [
                          'order_id' => $order_id,
-                         'gross_amount' => $validated['amount'],
+                         'gross_amount' => $amount,
                      ],
                      'customer_details' => [
                          'first_name' => explode(' ', $user->fullname)[0],
@@ -383,7 +386,7 @@ class PaymentGatewayController extends Controller
                  'payment_method' => $validated['payment_method'],
                  'payment_status' => $charge->transaction_status,
                  'payment_date' => now(),
-                 'amount' => $validated['amount'],
+                 'amount' => $amount,
              ]);
      
              if ($charge->transaction_status === 'settlement') {
