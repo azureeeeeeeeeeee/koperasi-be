@@ -97,6 +97,8 @@ Route::prefix('email')->group(function () {
     Route::post('/verify-otp', [EmailController::class, 'verifyOtp'])->name('email.verifyOtp');
     Route::post('/reset-password', [EmailController::class, 'resetPasswordWithOtp'])->name('email.resetPasswordWithOtp');
 });
+
+// Config Routes
 Route::prefix('config')->group(function () {
     Route::get('/', [ConfigController::class, 'index'])->name('config.index')->middleware('auth:sanctum');
     Route::get('/{id}', [ConfigController::class, 'show'])->name('config.show')->middleware('auth:sanctum');

@@ -27,6 +27,10 @@ namespace App\Http\Controllers;
  *     name="Cart",
  *     description="API endpoints to handle Cart"
  * )
+ * @OA\Tag(
+ *     name="Config",
+ *     description="API endpoints to handle Configuration variables"
+ * )
  */
 abstract class Controller
 {

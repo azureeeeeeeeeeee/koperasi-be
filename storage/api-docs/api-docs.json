@@ -1650,6 +1650,278 @@
                 ]
             }
         },
+        "/api/config": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get all config entries",
+                "operationId": "77401d99657c9a3bab30f528a0de6589",
+                "responses": {
+                    "200": {
+                        "description": "List of all config entries",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully retrieved all configs"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/Config"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Create a new config entry",
+                "operationId": "3c29e16f49f88df31b79514745f7cd95",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "key",
+                                    "value"
+                                ],
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "example": "iuran wajib"
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "example": "15000"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successfully created config",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully created config"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Config"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/config/{id}": {
+            "get": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Get a single config by ID",
+                "operationId": "0b23def1561bf86496dee5516436bbdd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Config found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully retrieved config"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Config"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Config not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Update a config entry by ID",
+                "operationId": "05351a66ec47dc9477b73a4c9d9fe2f1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "key": {
+                                        "type": "string",
+                                        "example": "iuran wajib"
+                                    },
+                                    "value": {
+                                        "type": "string",
+                                        "example": "20000"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully updated config",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully updated config"
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/Config"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Config not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Config"
+                ],
+                "summary": "Delete a config entry by ID",
+                "operationId": "b803bf8346d405157e7b206431ef7e5c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully deleted config",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully deleted config"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Config not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/email/send-otp": {
             "post": {
                 "tags": [
@@ -1924,12 +2196,6 @@
                                             "link"
                                         ],
                                         "example": "qris"
-                                    },
-                                    "amount": {
-                                        "description": "Amount to be paid",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 100000
                                     }
                                 },
                                 "type": "object"
@@ -2723,6 +2989,38 @@
                 },
                 "type": "object"
             },
+            "Config": {
+                "title": "Config",
+                "required": [
+                    "name",
+                    "potongan"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "key": {
+                        "type": "string",
+                        "example": "iuran wajib"
+                    },
+                    "value": {
+                        "type": "string",
+                        "example": "15000"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-01-01T00:00:00Z"
+                    }
+                },
+                "type": "object"
+            },
             "Product": {
                 "title": "Product",
                 "required": [
@@ -2801,6 +3099,10 @@
         {
             "name": "Cart",
             "description": "API endpoints to handle Cart"
+        },
+        {
+            "name": "Config",
+            "description": "API endpoints to handle Configuration variables"
         },
         {
             "name": "Email",

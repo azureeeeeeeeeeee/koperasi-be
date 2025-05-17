@@ -34,13 +34,6 @@ class PaymentGatewayController extends Controller
      *                 example="qris",
      *                 description="Payment method to use (qris or link)"
      *             ),
-     *             @OA\Property(
-     *                 property="amount",
-     *                 type="number",
-     *                 format="float",
-     *                 example=100000,
-     *                 description="Amount to be paid"
-     *             )
      *         )
      *     ),
      *     @OA\Response(
