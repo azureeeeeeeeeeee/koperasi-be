@@ -103,12 +103,83 @@ class EmailController extends Controller
      * )
      */
 
+     
+
     public function resetPasswordWithOtp(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'email' => 'required|email|exists:users,email',
-            'otp' => 'required|string',
             'new_password' => 'required|string|min:6|confirmed'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 400);
+        }
+
+        $email_check_req = DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$email_check_req || Carbon::parse($email_check_req->created_at)->addMinutes(10)->isPast()) {
+            return response()->json(['error' => 'Invalid or expired OTP'], 400);
+        }
+
+        // Reset the password
+        DB::table('users')
+            ->where('email', $request->email)
+            ->update([
+                'password' => Hash::make($request->new_password),
+            ]);
+
+        // Optionally delete the used OTP
+        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json(['message' => 'Password has been reset successfully']);
+    }
+
+    
+
+    /**
+     * @OA\Post(
+     *     path="/api/email/verify-otp",
+     *     summary="Verify OTP sent to user's email",
+     *     tags={"Email"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"email", "otp"},
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="otp", type="string", example="123456")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP verified successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="OTP verified successfully")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Invalid or expired OTP",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Invalid or expired OTP")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="The email field is required.")
+     *         )
+     *     )
+     * )
+     */
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:users,email',
+            'otp' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -124,16 +195,6 @@ class EmailController extends Controller
             return response()->json(['error' => 'Invalid or expired OTP'], 400);
         }
 
-        // Reset the password
-        DB::table('users')
-            ->where('email', $request->email)
-            ->update([
-                'password' => Hash::make($request->new_password),
-            ]);
-
-        // Optionally delete the used OTP
-        DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-
-        return response()->json(['message' => 'Password has been reset successfully']);
+        return response()->json(['message' => 'OTP verified successfully']);
     }
 }

@@ -1568,6 +1568,90 @@
                 }
             }
         },
+        "/api/email/verify-otp": {
+            "post": {
+                "tags": [
+                    "Email"
+                ],
+                "summary": "Verify OTP sent to user's email",
+                "operationId": "5a9b910d0c7b9e01ade2be4eeac152f1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP verified successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid or expired OTP",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Invalid or expired OTP"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "The email field is required."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/payment/create-payment": {
             "post": {
                 "tags": [
@@ -1834,10 +1918,6 @@
                                         "payment_url": {
                                             "type": "string",
                                             "example": "https://example.com/payment-link"
-                                        },
-                                        "qris_url": {
-                                            "type": "string",
-                                            "example": "https://example.com/qr-code"
                                         }
                                     },
                                     "type": "object"
@@ -1934,10 +2014,6 @@
                                         "payment_url": {
                                             "type": "string",
                                             "example": "https://example.com/payment-link"
-                                        },
-                                        "qris_url": {
-                                            "type": "string",
-                                            "example": "https://example.com/qr-code"
                                         }
                                     },
                                     "type": "object"
