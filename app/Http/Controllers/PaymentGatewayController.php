@@ -7,7 +7,9 @@ use Midtrans\Snap;
 use Midtrans\Config;
 use Midtrans\CoreApi;
 use App\Models\PaymentGateway;
+use Faker\Provider\ar_EG\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class PaymentGatewayController extends Controller
 {
@@ -649,6 +651,80 @@ class PaymentGatewayController extends Controller
                 'details' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/payment/transactions",
+     *     summary="Get list of transactions",
+     *     description="Fetches all transactions. Admin sees all transactions, while users see only their own.",
+     *     tags={"Payment Gateway"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Transaction list fetched successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Transaction list fetched successfully"),
+     *             @OA\Property(
+     *                 property="transactions",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="transaction_id", type="string", example="txn_123456789"),
+     *                     @OA\Property(property="order_id", type="string", example="CART-123456"),
+     *                     @OA\Property(property="user_id", type="integer", example=1),
+     *                     @OA\Property(property="cart_id", type="integer", example=2),
+     *                     @OA\Property(property="payment_method", type="string", example="qris"),
+     *                     @OA\Property(property="payment_status", type="string", example="pending"),
+     *                     @OA\Property(property="payment_date", type="string", format="date-time", example="2025-05-20T12:00:00Z"),
+     *                     @OA\Property(property="amount", type="number", format="float", example=50000),
+     *                     @OA\Property(
+     *                         property="cart",
+     *                         type="object",
+     *                         @OA\Property(property="id", type="integer", example=2),
+     *                         @OA\Property(
+     *                             property="user",
+     *                             type="object",
+     *                             @OA\Property(property="id", type="integer", example=1),
+     *                             @OA\Property(property="name", type="string", example="John Doe"),
+     *                             @OA\Property(property="email", type="string", example="john@example.com")
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Unauthorized")
+     *         )
+     *     )
+     * )
+     */
+    public function getTransactions(Request $request)
+    {
+        Gate::authorize('getTransactions', PaymentGateway::class);
+        $user = $request->user();
+
+        if ($user->tipe === 'admin') {
+            $transactions = \App\Models\PaymentGateway::with(['cart.user'])->latest()->get();
+
+        } elseif (in_array($user->tipe, ['pengguna', 'penitip'])) {
+            $transactions = \App\Models\PaymentGateway::whereHas('cart', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->with(['cart.user'])->latest()->get();
+        } else {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json([
+            'message' => 'Transaction list fetched successfully',
+            'transactions' => $transactions,
+        ]);
     }
 
 }

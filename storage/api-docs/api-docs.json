@@ -2551,6 +2551,127 @@
                 }
             }
         },
+        "/api/payment/transactions": {
+            "get": {
+                "tags": [
+                    "Payment Gateway"
+                ],
+                "summary": "Get list of transactions",
+                "description": "Fetches all transactions. Admin sees all transactions, while users see only their own.",
+                "operationId": "4958d4837ea155661ef3fcf1d2476e0a",
+                "responses": {
+                    "200": {
+                        "description": "Transaction list fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Transaction list fetched successfully"
+                                        },
+                                        "transactions": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "transaction_id": {
+                                                        "type": "string",
+                                                        "example": "txn_123456789"
+                                                    },
+                                                    "order_id": {
+                                                        "type": "string",
+                                                        "example": "CART-123456"
+                                                    },
+                                                    "user_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "cart_id": {
+                                                        "type": "integer",
+                                                        "example": 2
+                                                    },
+                                                    "payment_method": {
+                                                        "type": "string",
+                                                        "example": "qris"
+                                                    },
+                                                    "payment_status": {
+                                                        "type": "string",
+                                                        "example": "pending"
+                                                    },
+                                                    "payment_date": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2025-05-20T12:00:00Z"
+                                                    },
+                                                    "amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 50000
+                                                    },
+                                                    "cart": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "user": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "John Doe"
+                                                                    },
+                                                                    "email": {
+                                                                        "type": "string",
+                                                                        "example": "john@example.com"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Unauthorized"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/product": {
             "get": {
                 "tags": [

@@ -19,4 +19,9 @@ class PaymentGateway extends Model
         'payment_date',
         'amount',
     ];
+
+    public function cart()
+    {
+        return $this->belongsTo(Cart::class);
+    }
 }

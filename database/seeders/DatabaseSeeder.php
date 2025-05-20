@@ -46,6 +46,15 @@ class DatabaseSeeder extends Seeder
             'status_keanggotaan' => 'aktif',
         ]);
 
+        User::factory()->create([
+            'fullname' => 'Pegawai',
+            'email' => 'pegawai@gmail.com',
+            'password' => Hash::make('pegawai321321321'),
+            'tipe' => 'pegawai',
+            // 'is_verified' => true,
+            'status_keanggotaan' => 'bukan anggota',
+        ]);
+
         Category::create([
             'name' => 'makanan berat',
             'potongan' => 10.00,
