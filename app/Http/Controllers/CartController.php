@@ -201,6 +201,7 @@ class CartController extends Controller
                 'category' => $product->category->name ?? null,
                 'price' => $product->price,
                 'jumlah' => $product->pivot->jumlah,
+                'stock' => $product->stock,
                 'subtotal' => $product->price * $product->pivot->jumlah
             ];
         });
