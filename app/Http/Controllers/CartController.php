@@ -210,6 +210,8 @@ class CartController extends Controller
             'message' => 'Cart fetched successfully',
             'cart_id' => $cart->id,
             'total_harga' => $cart->total_harga,
+            'status_barang' => $cart->status_barang,
+            'sudah_bayar' => $cart->sudah_bayar,
             'items' => $items,
         ]);
     }
@@ -542,6 +544,8 @@ class CartController extends Controller
             'message' => 'Cart fetched successfully',
             'cart_id' => $cart->id,
             'total_harga' => $cart->total_harga,
+            'status_barang' => $cart->status_barang,
+            'sudah_bayar' => $cart->sudah_bayar,
             'items' => $items,
         ]);
     }
