@@ -332,5 +332,46 @@ class AuthController extends Controller
             "message" => "Redirect to OTP verification page."
         ]);
     }
+
+
+
+    /**
+     * @OA\Put(
+     *     path="/api/auth/password",
+     *     tags={"Authentication"},
+     *     summary="Change User Password",
+     *     description="Change user password",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"old_password","new_password", "new_password_confirmation"},
+     *             @OA\Property(property="old_password", type="string", format="password", example="oldpassword123"),
+     *             @OA\Property(property="new_password", type="string", format="password", example="newpassword123"),
+     *             @OA\Property(property="new_password_confirmation", type="string", format="password", example="newpassword123")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Password Change Successfully"),
+     *     @OA\Response(response=400, description="Old password is incorrect"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'old_password' => 'required',
+            'new_password' => 'required|confirmed|min:8',
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($request->old_password, $user->password)) {
+            return response()->json(['message' => 'Old password is incorrect'], 400);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json(['message' => 'Password changed successfully']);
+    }
     
 }

@@ -33,6 +33,7 @@ Route::prefix('auth')->middleware('api')->group(function () {
     // Route::post('/otp/verify', [AuthController::class, 'verifyOtp'])->name('auth.verifyOtp');
     // Route::get('/otp/verify-page', [AuthController::class, 'verifyOtpPage'])->name('auth.verifyOtpPage');
     Route::get('/verify/{token}', [AuthController::class, 'verifyEmail'])->name('auth.verify');
+    Route::put('/password', [AuthController::class, 'changePassword'])->name('auth.change.password')->middleware('auth:sanctum');
 });
 
 // Admin Routes

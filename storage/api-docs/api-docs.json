@@ -87,9 +87,7 @@
                             "schema": {
                                 "required": [
                                     "fullname",
-                                    "email",
-                                    "password",
-                                    "password_confirmation"
+                                    "email"
                                 ],
                                 "properties": {
                                     "fullname": {
@@ -100,16 +98,6 @@
                                         "type": "string",
                                         "format": "email",
                                         "example": "user@example.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "password123"
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "password123"
                                     }
                                 },
                                 "type": "object"
@@ -564,6 +552,59 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/auth/password": {
+            "put": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Change User Password",
+                "description": "Change user password",
+                "operationId": "9dafc4d01f0b796fa803836cd8e99e91",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "old_password",
+                                    "new_password",
+                                    "new_password_confirmation"
+                                ],
+                                "properties": {
+                                    "old_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "oldpassword123"
+                                    },
+                                    "new_password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    },
+                                    "new_password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password Change Successfully"
+                    },
+                    "400": {
+                        "description": "Old password is incorrect"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
             }
         },
         "/api/cart": {
