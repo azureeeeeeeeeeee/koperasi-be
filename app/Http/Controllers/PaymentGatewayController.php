@@ -707,8 +707,11 @@ class PaymentGatewayController extends Controller
      */
     public function getTransactions(Request $request)
     {
-        Gate::authorize('getTransactions', PaymentGateway::class);
         $user = $request->user();
+
+        // if (!in_array($user->tipe, ['admin', 'pengguna', 'penitip'])) {
+        //     return response()->json(['error' => 'Unauthorized'], 403);
+        // }
 
         if ($user->tipe === 'admin') {
             $transactions = \App\Models\PaymentGateway::with(['cart.user'])->latest()->get();
