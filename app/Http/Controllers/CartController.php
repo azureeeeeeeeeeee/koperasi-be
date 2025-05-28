@@ -192,6 +192,7 @@ class CartController extends Controller
 
         Gate::authorize('view', $cart);
 
+        
         $cart->load('products.category');
 
         $items = $cart->products->map(function ($product) {

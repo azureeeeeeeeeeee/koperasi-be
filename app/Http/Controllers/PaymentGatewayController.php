@@ -453,13 +453,51 @@ class PaymentGatewayController extends Controller
      
          // Validate input
          $validated = $request->validate([
-             'cart_id' => 'required|exists:carts,id',
-             'payment_method' => 'required|string|in:qris,link',
-             'amount' => 'required|numeric|min:1000',
-         ]);
+            'cart_id' => 'required|exists:carts,id',
+            'payment_method' => 'required|string|in:qris,link,cod',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|exists:cart_item,product_id',
+            'items.*.jumlah' => 'required|integer|min:1',
+          ]);
      
-         // Get cart
-         $cart = \App\Models\Cart::find($validated['cart_id']);
+        $cart = Cart::findOrFail($validated['cart_id']);
+        $cart->load('products.category');
+
+        $selectedItemIds = collect($validated['items'])->pluck('product_id')->toArray();
+        $cart->products()->detach(
+            $cart->products()->whereNotIn('product_id', $selectedItemIds)->pluck('product_id')
+        );
+
+        foreach ($validated['items'] as $itemData) {
+            $cart->products()->updateExistingPivot($itemData['product_id'], [
+                'jumlah' => $itemData['jumlah']
+            ]);
+        
+            $product = \App\Models\Product::find($itemData['product_id']);
+            if ($product) {
+                $product->stock -= $itemData['jumlah'];
+                if ($product->stock < 0) {
+                    return response()->json([
+                        'error' => 'Stok produk tidak mencukupi untuk produk ID: ' . $itemData['product_id']
+                    ], 422);
+                }
+                $product->save();
+            }
+        }
+
+        // $selectedItems = $cart->products()->whereIn('product_id', $selectedItemIds)->with('product')->get();
+
+        $total = 0;
+        // foreach ($selectedItems as $item) {
+        foreach ($cart->products()->get() as $item) {
+            $potongan = $item->category->potongan ?? 0;
+            $markup = $item->price * ($potongan / 100);
+            $realPrice = $item->price + $markup;
+            $total += $realPrice * $item->pivot->jumlah;
+        }
+
+        $cart->total_harga = $total;
+        $cart->save();
      
          // Generate unique order_id
          $order_id = 'CART-' . uniqid();
@@ -473,7 +511,7 @@ class PaymentGatewayController extends Controller
                      'payment_type' => 'qris',
                      'transaction_details' => [
                          'order_id' => $order_id,
-                         'gross_amount' => $validated['amount'],
+                         'gross_amount' => $cart->total_harga,
                      ],
                      'customer_details' => [
                          'first_name' => $cart->user->name,
@@ -489,12 +527,12 @@ class PaymentGatewayController extends Controller
                          break;
                      }
                  }
-             } else {
+             } elseif ($validated['payment_method'] === 'link') {
                  // Use Snap API for 'link'
                  $params = [
                      'transaction_details' => [
                          'order_id' => $order_id,
-                         'gross_amount' => $validated['amount'],
+                         'gross_amount' => $cart->total_harga,
                      ],
                      'customer_details' => [
                          'first_name' => $cart->user->name,
@@ -510,6 +548,30 @@ class PaymentGatewayController extends Controller
                      'transaction_status' => 'pending',
                  ];
              }
+
+             if ($validated['payment_method'] === 'cod') {
+                 \App\Models\PaymentGateway::create([
+                     'transaction_id' => $order_id,
+                     'order_id' => $order_id,
+                     'user_id' => $cart->user_id ? $cart->user_id : $cart->guest_id,
+                     'cart_id' => $cart->id,
+                     'payment_method' => $validated['payment_method'],
+                     'payment_status' => "settlement",
+                     'payment_date' => now(),
+                     'amount' => $cart->total_harga,
+                 ]);
+
+                $cart->status = 'akan dikirim';
+                $cart->sudah_bayar = true;
+                $cart->save();
+
+                 
+                return response()->json([
+                    'message' => 'Payment initiated',
+                    'status' => 'cod',
+                    'order_id' => $order_id,
+                ], 201);
+             }
      
              \App\Models\PaymentGateway::create([
                  'transaction_id' => $charge->transaction_id,
@@ -519,7 +581,7 @@ class PaymentGatewayController extends Controller
                  'payment_method' => $validated['payment_method'],
                  'payment_status' => $charge->transaction_status,
                  'payment_date' => now(),
-                 'amount' => $validated['amount'],
+                 'amount' => $cart->total_harga,
              ]);
      
              $cart->status = 'Menunggu pembayaran';

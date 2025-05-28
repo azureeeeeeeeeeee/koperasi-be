@@ -17,7 +17,7 @@ class ProductPolicy
             return true;
         }
         elseif ($user->tipe == 'pengguna') {
-            $user->status_keanggotaan == 'aktif' ? true : false;
+            return $user->status_keanggotaan == 'aktif' ? true : false;
         }
         return $user->tipe == 'penitip' ? true : false;
     }
