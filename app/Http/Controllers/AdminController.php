@@ -204,8 +204,6 @@ class AdminController extends Controller
      *             @OA\Property(property="tipe", type="string", enum={"pengguna", "pegawai", "penitip", "admin"}, example="pengguna"),
      *             @OA\Property(property="status_keanggotaan", type="string", enum={"aktif", "tidak aktif", "suspended"}, example="active"),
      *             @OA\Property(property="saldo", type="number", format="float", example=50000),
-     *             @OA\Property(property="password", type="string", format="password", example="newpassword123"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="newpassword123")
      *         )
      *     ),
      *     @OA\Response(

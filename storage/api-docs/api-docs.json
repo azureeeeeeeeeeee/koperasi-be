@@ -249,16 +249,6 @@
                                         "type": "number",
                                         "format": "float",
                                         "example": 50000
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "newpassword123"
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "newpassword123"
                                     }
                                 },
                                 "type": "object"
@@ -605,6 +595,78 @@
                         "description": "Unauthorized"
                     }
                 }
+            }
+        },
+        "/api/auth/user": {
+            "put": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Update User Data",
+                "description": "Update user information",
+                "operationId": "ad7ae409e2d14ebf2ac4cca355a2ab8e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User ID",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "fullname": {
+                                        "type": "string",
+                                        "example": "John Doe Updated"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User berhasil diupdate",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Data user berhasil diperbarui"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "User tidak ditemukan"
+                    },
+                    "422": {
+                        "description": "Validasi error"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/cart": {

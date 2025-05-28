@@ -373,5 +373,52 @@ class AuthController extends Controller
 
         return response()->json(['message' => 'Password changed successfully']);
     }
+
+    /**
+     * @OA\Put(
+     *     path="/api/auth/user",
+     *     tags={"Authentication"},
+     *     summary="Update User Data",
+     *     description="Update user information",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="User ID",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="fullname", type="string", example="John Doe Updated"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="User berhasil diupdate",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Data user berhasil diperbarui"),
+     *             @OA\Property(property="data", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="User tidak ditemukan"),
+     *     @OA\Response(response=422, description="Validasi error"),
+     *     @OA\Response(response=401, description="Unauthorized")
+     * )
+     */
+    public function update_pengguna(Request $request)
+    {
+        $user = $request->user();
     
+        $validated = $request->validate([
+            'fullname' => 'sometimes|string|max:255'
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Data user berhasil diperbarui',
+        ], 200);
+    }
 }
