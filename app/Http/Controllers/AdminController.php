@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 use App\Models\User;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 
 class AdminController extends Controller
@@ -16,11 +17,9 @@ class AdminController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"fullname", "email", "password", "password_confirmation"},
+     *             required={"fullname", "email"},
      *             @OA\Property(property="fullname", type="string", example="John Doe"),
      *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
      *         )
      *     ),
      *     @OA\Response(response=201, description="User berhasil dibuat"),
@@ -31,15 +30,10 @@ class AdminController extends Controller
             $fields = $request->validate([
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|email|unique:users',
-                'password' => 'required|confirmed|min:8',
             ]);
             
     
-            $emailParts = explode('@', $fields['email']);
-        
-            if (isset($emailParts[1]) && strpos($emailParts[1], '.itk.ac.id') === false) {
-                return response()->json(['message' => 'Daftar sebagai pengguna harus menggunakan email ITK'], 400);
-            }
+            $fields['password'] = Hash::make('koperasi2025itk');
     
             $user = User::create($fields);
     
@@ -239,27 +233,14 @@ class AdminController extends Controller
             'fullname' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|unique:users,email,'.$id,
             'tipe' => 'sometimes|in:penitip,pengguna,pegawai,admin',
-            'status_keanggotaan' => 'sometimes|in:aktif,tidak aktif',
+            'status_keanggotaan' => 'sometimes|in:aktif,tidak aktif,bukan anggota',
             'saldo' => 'sometimes|numeric',
-            'password' => 'sometimes|confirmed|min:8'
         ]);
-
-        if ($request->has('email')) {
-            $emailParts = explode('@', $request->email);
-            if (!isset($emailParts[1]) || strpos($emailParts[1], '.itk.ac.id') === false) {
-                return response()->json(['message' => 'Email harus menggunakan domain ITK'], 422);
-            }
-        }
-
-        if (!empty($validated['password'])) {
-            $validated['password'] = bcrypt($validated['password']);
-        }
 
         $user->update($validated);
 
         return response()->json([
             'message' => 'Data user berhasil diperbarui',
-            'data' => $user->makeHidden(['created_at', 'updated_at'])
         ], 200);
     }
 }
