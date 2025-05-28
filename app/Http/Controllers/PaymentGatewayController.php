@@ -415,10 +415,20 @@ class PaymentGatewayController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"cart_id", "payment_method", "amount"},
+     *             required={"cart_id", "payment_method", "items"},
      *             @OA\Property(property="cart_id", type="integer", example=1, description="ID of the cart"),
-     *             @OA\Property(property="payment_method", type="string", enum={"qris", "link"}, example="qris", description="Payment method"),
-     *             @OA\Property(property="amount", type="number", format="float", example=50000, description="Cart payment amount")
+     *             @OA\Property(property="payment_method", type="string", enum={"qris", "link", "cod"}, example="qris", description="Payment method"),
+     *             @OA\Property(
+     *                 property="items",
+     *                 type="array",
+     *                 description="List of selected items with quantity",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"product_id", "jumlah"},
+     *                     @OA\Property(property="product_id", type="integer", example=101),
+     *                     @OA\Property(property="jumlah", type="integer", example=2)
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -428,7 +438,14 @@ class PaymentGatewayController extends Controller
      *             @OA\Property(property="message", type="string", example="Payment initiated"),
      *             @OA\Property(property="status", type="string", example="pending"),
      *             @OA\Property(property="order_id", type="string", example="CART-123456"),
-     *             @OA\Property(property="payment_url", type="string", example="https://example.com/payment-link"),
+     *             @OA\Property(property="payment_url", type="string", nullable=true, example="https://example.com/payment-link")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation or business logic error (e.g. out of stock)",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Stok produk tidak mencukupi untuk produk ID: 5")
      *         )
      *     ),
      *     @OA\Response(
@@ -441,8 +458,6 @@ class PaymentGatewayController extends Controller
      *     )
      * )
      */
-
-
      public function payForCart(Request $request)
      {
          // Midtrans setup

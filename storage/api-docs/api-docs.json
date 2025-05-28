@@ -2573,7 +2573,7 @@
                                 "required": [
                                     "cart_id",
                                     "payment_method",
-                                    "amount"
+                                    "items"
                                 ],
                                 "properties": {
                                     "cart_id": {
@@ -2586,15 +2586,31 @@
                                         "type": "string",
                                         "enum": [
                                             "qris",
-                                            "link"
+                                            "link",
+                                            "cod"
                                         ],
                                         "example": "qris"
                                     },
-                                    "amount": {
-                                        "description": "Cart payment amount",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 50000
+                                    "items": {
+                                        "description": "List of selected items with quantity",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "product_id",
+                                                "jumlah"
+                                            ],
+                                            "properties": {
+                                                "product_id": {
+                                                    "type": "integer",
+                                                    "example": 101
+                                                },
+                                                "jumlah": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -2623,7 +2639,24 @@
                                         },
                                         "payment_url": {
                                             "type": "string",
-                                            "example": "https://example.com/payment-link"
+                                            "example": "https://example.com/payment-link",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation or business logic error (e.g. out of stock)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Stok produk tidak mencukupi untuk produk ID: 5"
                                         }
                                     },
                                     "type": "object"
