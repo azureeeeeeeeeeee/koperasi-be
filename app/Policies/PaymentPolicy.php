@@ -66,6 +66,15 @@ class PaymentPolicy
 
     public function getTransactions(User $user): bool
     {
-        return in_array($user->tipe, ['admin', 'pengguna', 'penitip']);
+        if ($user->tipe === 'admin') {
+            return true;
+        }
+        if ($user->tipe === 'pengguna') {
+            return true;
+        }
+        if ($user->tipe === 'penitip') {
+            return true;
+        }
+        return false;
     }
 }

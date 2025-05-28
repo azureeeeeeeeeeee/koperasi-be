@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Cart;
 use App\Models\Config as ModelsConfig;
 use Midtrans\Snap;
 use Midtrans\Config;
@@ -707,24 +708,23 @@ class PaymentGatewayController extends Controller
      */
     public function getTransactions(Request $request)
     {
-        Gate::authorize('getTransactions', PaymentGateway::class);
+        // Gate::authorize('getTransactions', PaymentGateway::class);
         $user = $request->user();
 
-        if ($user->tipe === 'admin') {
-            $transactions = \App\Models\PaymentGateway::with(['cart.user'])->latest()->get();
-
-        } elseif (in_array($user->tipe, ['pengguna', 'penitip'])) {
-            $transactions = \App\Models\PaymentGateway::whereHas('cart', function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            })->with(['cart.user'])->latest()->get();
-        } else {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($user->tipe !== 'admin') {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'error' => 'You do not have permission to view all transactions'
+            ], 403);
         }
+
+        $transactions = \App\Models\PaymentGateway::with(['cart.user'])->latest()->get();
+        $delivery = Cart::where('sudah_bayar', 1)->get();
 
         return response()->json([
             'message' => 'Transaction list fetched successfully',
             'transactions' => $transactions,
+            'delivery' => $delivery
         ]);
     }
-
 }
