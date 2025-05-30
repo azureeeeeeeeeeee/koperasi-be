@@ -38,7 +38,7 @@ class AdminController extends Controller
             $user = User::create($fields);
     
             $data = [
-                'message' => 'User berhasil dibuat'
+                'message' => 'User berhasil dibuat','data'=>$user
             ];
     
             return response()->json($data, 201);
