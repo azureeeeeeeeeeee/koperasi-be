@@ -30,6 +30,8 @@ class AdminController extends Controller
             $fields = $request->validate([
                 'fullname' => 'required|string|max:255',
                 'email' => 'required|email|unique:users',
+                'tipe' => 'required|in:pengguna,pegawai,penitip,admin',
+                'status_keanggotaan' => 'in:aktif,tidak aktif,bukan anggota',
             ]);
             
     
