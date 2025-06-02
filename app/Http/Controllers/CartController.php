@@ -72,7 +72,7 @@ class CartController extends Controller
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'category' => $product->category->name ?? null, // Ambil nama kategori jika ada
+                    'category' => $product->category ?? null, // Ambil nama kategori jika ada
                     'price' => $product->price,
                     'jumlah' => $jumlah, // Kuantitas dari tabel pivot
                     'stock' => $product->stock,
@@ -244,11 +244,10 @@ class CartController extends Controller
             return [
                 'id' => $product->id,
                 'name' => $product->name,
-                'category' => $product->category->name ?? null,
+                'category' => $product->category ?? null,
                 'price' => $product->price,
                 'jumlah' => $product->pivot->jumlah,
-                'stock' => $product->stock,
-                'subtotal' => $product->price * $product->pivot->jumlah
+                'subtotal' => ($product->price * (1 + $product->cateegory->potongan)) * $product->pivot->jumlah
             ];
         });
 
@@ -261,6 +260,101 @@ class CartController extends Controller
             'items' => $items,
         ]);
     }
+
+
+    /**
+     * @OA\Get(
+     *     path="/api/cart/{id_user}/history",
+     *     summary="Get all carts for a user",
+     *     tags={"Cart"},
+     *     security={{"sanctum":{}}},
+     *     @OA\Parameter(
+     *         name="id_user",
+     *         in="path",
+     *         required=true,
+     *         description="User ID whose carts will be fetched",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Carts for user fetched successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Cart for user fetched successfully"),
+     *             @OA\Property(
+     *                 property="carts",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="cart_id", type="integer", example=1),
+     *                     @OA\Property(property="total_harga", type="integer", example=50000),
+     *                     @OA\Property(property="status_barang", type="string", example="menunggu"),
+     *                     @OA\Property(property="sudah_bayar", type="boolean", example=false),
+     *                     @OA\Property(
+     *                         property="items",
+     *                         type="array",
+     *                         @OA\Items(
+     *                             @OA\Property(property="id", type="integer", example=101),
+     *                             @OA\Property(property="name", type="string", example="Produk A"),
+     *                             @OA\Property(property="category", type="string", example="Elektronik"),
+     *                             @OA\Property(property="price", type="integer", example=20000),
+     *                             @OA\Property(property="jumlah", type="integer", example=2),
+     *                             @OA\Property(property="subtotal", type="integer", example=42000)
+     *                         )
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Unauthorized access to user's carts"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="User or carts not found"
+     *     )
+     * )
+     */
+    public function showByUser(Request $requesst, int $id_user)
+    {
+        $carts = Cart::where(
+            ['user_id' => $id_user, 'sudah_bayar' => 1],
+        )->get();
+
+        foreach ($carts as $cart) {
+            Gate::authorize('view', $cart);
+            $cart->load('products.category');
+        }
+
+        
+
+        $finalCarts = $carts->map(function ($cart) {
+            $items = $cart->products->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'category' => $product->category->name ?? null,
+                    'price' => $product->price,
+                    'jumlah' => $product->pivot->jumlah,
+                    'subtotal' => ($product->price * (1 + ($product->category->potongan / 100))) * $product->pivot->jumlah
+                ];
+            });
+    
+            return [
+                'cart_id' => $cart->id,
+                'total_harga' => $cart->total_harga,
+                'status_barang' => $cart->status_barang,
+                'sudah_bayar' => $cart->sudah_bayar,
+                'items' => $items,
+            ];
+        });
+
+        return response()->json([
+            'message' => 'Cart for user fetched successfully',
+            'carts' => $finalCarts,
+        ]);
+    }
+
+    
 
     /**
      * @OA\Put(

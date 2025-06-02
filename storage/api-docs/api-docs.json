@@ -975,6 +975,111 @@
                 ]
             }
         },
+        "/api/cart/{id_user}/history": {
+            "get": {
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Get all carts for a user",
+                "operationId": "4b04e4cbdf844598776f910ddf146f61",
+                "parameters": [
+                    {
+                        "name": "id_user",
+                        "in": "path",
+                        "description": "User ID whose carts will be fetched",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Carts for user fetched successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Cart for user fetched successfully"
+                                        },
+                                        "carts": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "cart_id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "total_harga": {
+                                                        "type": "integer",
+                                                        "example": 50000
+                                                    },
+                                                    "status_barang": {
+                                                        "type": "string",
+                                                        "example": "menunggu"
+                                                    },
+                                                    "sudah_bayar": {
+                                                        "type": "boolean",
+                                                        "example": false
+                                                    },
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 101
+                                                                },
+                                                                "name": {
+                                                                    "type": "string",
+                                                                    "example": "Produk A"
+                                                                },
+                                                                "category": {
+                                                                    "type": "string",
+                                                                    "example": "Elektronik"
+                                                                },
+                                                                "price": {
+                                                                    "type": "integer",
+                                                                    "example": 20000
+                                                                },
+                                                                "jumlah": {
+                                                                    "type": "integer",
+                                                                    "example": 2
+                                                                },
+                                                                "subtotal": {
+                                                                    "type": "integer",
+                                                                    "example": 42000
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized access to user's carts"
+                    },
+                    "404": {
+                        "description": "User or carts not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
         "/api/cart/{id_user}/update-status": {
             "put": {
                 "tags": [
