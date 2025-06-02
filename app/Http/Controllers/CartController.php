@@ -49,16 +49,61 @@ class CartController extends Controller
      */
     public function index()
     {
-        Log::info('Current user:', ['user' => Auth::user()]);
-        Gate::authorize('viewAny', Cart::class);
-        $carts = Cart::all();
+        Log::info('Current user for cart listing:', ['user_id' => Auth::id()]);
 
-        $data = [
-            'message' => 'all carts fetched successfully',
-            'data' => $carts
+        // Otorisasi apakah pengguna dapat melihat daftar keranjang
+        Gate::authorize('viewAny', Cart::class);
+
+        // Ambil semua keranjang dan eager load relasi 'products' beserta 'category' dari produk
+        // Ini membantu menghindari masalah N+1 query.
+        // Anda mungkin ingin memfilter keranjang berdasarkan pengguna tertentu jika diperlukan,
+        // misalnya: $carts = Cart::where('user_id', Auth::id())->with('products.category')->get();
+        // Atau jika ini untuk admin yang melihat semua keranjang:
+        $carts = Cart::with('products.category', 'user')->get();
+
+        // Transformasi koleksi keranjang untuk menyertakan detail item yang diformat
+        $formattedCarts = $carts->map(function ($cart) {
+            // Untuk setiap keranjang, petakan produk-produknya ke format yang diinginkan
+            $items = $cart->products->map(function ($product) {
+                // Pastikan relasi pivot ada dan memiliki 'jumlah'
+                $jumlah = $product->pivot ? $product->pivot->jumlah : 0;
+                $subtotal = $product->price * $jumlah;
+
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'category' => $product->category->name ?? null, // Ambil nama kategori jika ada
+                    'price' => $product->price,
+                    'jumlah' => $jumlah, // Kuantitas dari tabel pivot
+                    'stock' => $product->stock,
+                    'subtotal' => $subtotal,
+                ];
+            });
+
+            // Kembalikan struktur yang diinginkan untuk setiap keranjang individual
+            return [
+                'cart_id' => $cart->id,
+                'user_id' => $cart->user_id,
+                'user' => $cart->user ? [
+                    'id' => $cart->user->id,
+                    'fullname' => $cart->user->fullname,
+                ] : null,
+                'guest_id' => $cart->guest_id, // Tambahkan jika ada dan relevan
+                'total_harga' => $cart->total_harga,
+                'status_barang' => $cart->status_barang, // Tambahkan jika ada dan relevan
+                'sudah_bayar' => $cart->sudah_bayar,
+                'created_at' => $cart->created_at->toDateTimeString(), // Format tanggal jika perlu
+                'updated_at' => $cart->updated_at->toDateTimeString(), // Format tanggal jika perlu
+                'items' => $items, // Daftar produk yang telah diformat dalam keranjang ini
+            ];
+        });
+
+        $responseData = [
+            'message' => 'All carts fetched successfully',
+            'data' => $formattedCarts, // Kirim koleksi keranjang yang telah ditransformasi
         ];
 
-        return response()->json($data, 200);
+        return response()->json($responseData, 200);
     }
 
     /**
