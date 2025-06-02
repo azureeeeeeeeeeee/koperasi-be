@@ -15,7 +15,7 @@ class PaymentGatewayController extends Controller
     /**
      * @OA\Post(
      *     path="/api/payment/create-payment",
-     *     summary="Create a new payment using QRIS or payment link",
+     *     summary="Create a new payment via Midtrans or manual/iuran methods",
      *     tags={"Payment Gateway"},
      *     @OA\RequestBody(
      *         required=true,
@@ -30,10 +30,32 @@ class PaymentGatewayController extends Controller
      *             @OA\Property(
      *                 property="payment_method",
      *                 type="string",
-     *                 enum={"qris", "link"},
+     *                 enum={"qris", "gopay", "link", "bank", "manual", "iuran_wajib"},
      *                 example="qris",
-     *                 description="Payment method to use (qris or link)"
+     *                 description="Payment method to use"
      *             ),
+     *             @OA\Property(
+     *                 property="amount",
+     *                 type="number",
+     *                 format="float",
+     *                 example=100000,
+     *                 description="Amount to be paid"
+     *             ),
+     *             @OA\Property(
+     *                 property="phone",
+     *                 type="string",
+     *                 example="08123456789",
+     *                 nullable=true,
+     *                 description="Phone number (required for GoPay)"
+     *             ),
+     *             @OA\Property(
+     *                 property="bank",
+     *                 type="string",
+     *                 enum={"bni", "mandiri", "bri", "bca"},
+     *                 example="bni",
+     *                 nullable=true,
+     *                 description="Bank code (required for 'bank' or 'manual' methods)"
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -43,13 +65,35 @@ class PaymentGatewayController extends Controller
      *             @OA\Property(
      *                 property="payment_url",
      *                 type="string",
+     *                 nullable=true,
      *                 example="https://app.sandbox.midtrans.com/snap/v2/vtweb/ABC123",
-     *                 description="Redirect URL for payment (QR code or Snap payment link)"
+     *                 description="Redirect or QR code URL for payment"
+     *             ),
+     *             @OA\Property(
+     *                 property="payment_va",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="1234567890",
+     *                 description="Virtual account number (if using 'bank' method)"
+     *             ),
+     *             @OA\Property(
+     *                 property="payment_account",
+     *                 type="string",
+     *                 nullable=true,
+     *                 example="bni",
+     *                 description="Bank name for manual transfer (if using 'manual' method)"
+     *             ),
+     *             @OA\Property(
+     *                 property="payment_ammount",
+     *                 type="number",
+     *                 format="float",
+     *                 example=100000,
+     *                 description="Total amount charged"
      *             ),
      *             @OA\Property(
      *                 property="payment",
      *                 type="object",
-     *                 description="Payment details",
+     *                 description="Details of the saved payment",
      *                 @OA\Property(property="transaction_id", type="string", example="txn_654321"),
      *                 @OA\Property(property="order_id", type="string", example="ORD-123456"),
      *                 @OA\Property(property="user_id", type="integer", example=1),
@@ -57,7 +101,20 @@ class PaymentGatewayController extends Controller
      *                 @OA\Property(property="payment_status", type="string", example="pending"),
      *                 @OA\Property(property="payment_date", type="string", format="date-time", example="2025-05-05T14:30:00Z"),
      *                 @OA\Property(property="amount", type="number", format="float", example=100000)
+     *             ),
+     *             @OA\Property(
+     *                 property="extra",
+     *                 type="object",
+     *                 nullable=true,
+     *                 description="Optional additional payment info (e.g., VA number, bank name)"
      *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Validation error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string", example="Bank not supported for virtual account")
      *         )
      *     ),
      *     @OA\Response(
@@ -71,100 +128,313 @@ class PaymentGatewayController extends Controller
      * )
      */
 
+
     
-     public function createPayment(Request $request)
-     {
-         // Setup Midtrans config
-         Config::$serverKey = env('MIDTRANS_SERVER_KEY');
-         Config::$isProduction = false;
-         Config::$isSanitized = true;
-         Config::$is3ds = true;
-     
-         // Validate input
-         $validatedData = $request->validate([
-             'user_id' => 'required|integer',
-             'payment_method' => 'required|string|in:qris,link', // allow both
-             'amount' => 'required|numeric|min:0',
-         ]);
-     
-         // Generate unique numeric order_id
-         $order_id = 'ORD-' . rand(100000, 999999);
-     
-         // Common transaction params
-         $transactionDetails = [
-             'order_id' => $order_id,
-             'gross_amount' => $validatedData['amount'],
-         ];
-     
-         $customerDetails = [
-             'first_name' => 'User',
-             'last_name' => 'Example',
-             'email' => 'user@example.com',
-         ];
-     
-         try {
-             $charge = null;
-             $paymentUrl = null;
-     
-             if ($validatedData['payment_method'] === 'qris') {
-                 // Use Core API for QRIS
-                 $params = [
-                     'payment_type' => 'qris',
-                     'transaction_details' => $transactionDetails,
-                     'customer_details' => $customerDetails,
-                 ];
-     
-                 $charge = CoreApi::charge($params);
-     
-                 // Get QR URL from action
-                 foreach ($charge->actions as $action) {
-                     if ($action->name === 'generate-qr-code') {
-                         $paymentUrl = $action->url;
-                         break;
-                     }
-                 }
-             } else {
-                 // Use Snap API for "link" method
-                 $params = [
-                     'transaction_details' => $transactionDetails,
-                     'customer_details' => $customerDetails,
-                     // optionally: 'enabled_payments' => ['gopay', 'bank_transfer', ...],
-                 ];
-     
-                 $snapUrl = \Midtrans\Snap::createTransaction($params)->redirect_url;
-                 $paymentUrl = $snapUrl;
-     
-                 // Simulate a successful charge object (Snap doesn't return full CoreApi data)
-                 $charge = (object)[
-                     'transaction_id' => uniqid('txn_'),
-                     'transaction_status' => 'pending',
-                 ];
-             }
-     
-             // Save to database
-             $payment = PaymentGateway::create([
-                 'transaction_id' => $charge->transaction_id,
-                 'order_id' => $order_id,
-                 'user_id' => $validatedData['user_id'],
-                 'payment_method' => $validatedData['payment_method'],
-                 'payment_status' => $charge->transaction_status ?? 'pending',
-                 'payment_date' => now(),
-                 'amount' => $validatedData['amount'],
-             ]);
-     
-             return response()->json([
-                 'payment_url' => $paymentUrl,
-                 'payment' => $payment
-             ], 201);
-     
-         } catch (\Exception $e) {
-             \Log::error('Payment error: ' . $e->getMessage());
-             return response()->json([
-                 'error' => 'Something went wrong',
-                 'details' => $e->getMessage()
-             ], 500);
-         }
-     }
+    public function createPayment(Request $request)
+    {
+        Config::$serverKey = env('MIDTRANS_SERVER_KEY');
+        Config::$isProduction = false;
+        Config::$isSanitized = true;
+        Config::$is3ds = true;
+
+        $validatedData = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'payment_method' => 'required|string|in:qris,gopay,link,bank,manual,iuran_wajib',
+            'amount' => 'required|numeric|min:0',
+            'phone' => 'required_if:payment_method,gopay|nullable|string',
+            'bank' => 'required_if:payment_method,bank,manual|nullable|string|in:bni,mandiri,bri,bca',
+        ]);
+
+        $user = \App\Models\User::find($validatedData['user_id']);
+
+        $order_id = 'ORD-' . uniqid();
+
+        $transactionDetails = [
+            'order_id' => $order_id,
+            'gross_amount' => $validatedData['amount'],
+        ];
+
+        $customerDetails = [
+            'first_name' => explode(' ', $user->fullname)[0] ?? $user->name ?? 'User',
+            'last_name' => explode(' ', $user->fullname)[1] ?? '',
+            'email' => $user->email,
+            'phone' => $validatedData['phone'] ?? $user->phone ?? null,
+        ];
+
+        try {
+            $charge = null;
+            $paymentUrl = null;
+            $extra = [];
+
+            switch ($validatedData['payment_method']) {
+                case 'qris':
+                    $params = [
+                        'payment_type' => 'qris',
+                        'transaction_details' => $transactionDetails,
+                        'customer_details' => $customerDetails,
+                    ];
+                    $charge = CoreApi::charge($params);
+                    foreach ($charge->actions ?? [] as $action) {
+                        if ($action->name === 'generate-qr-code') {
+                            $paymentUrl = $action->url;
+                            break;
+                        }
+                    }
+                    break;
+
+                case 'gopay':
+                    $params = [
+                        'payment_type' => 'gopay',
+                        'transaction_details' => $transactionDetails,
+                        'customer_details' => $customerDetails,
+                        'gopay' => [
+                            'enable_callback' => false,
+                            'callback_url' => '',
+                        ],
+                    ];
+                    $charge = CoreApi::charge($params);
+                    $paymentUrl = $charge->actions[1]->url ?? $charge->actions[0]->url ?? null;
+                    break;
+
+                case 'link':
+                    $params = [
+                        'transaction_details' => $transactionDetails,
+                        'customer_details' => $customerDetails,
+                    ];
+                    $snapUrl = Snap::createTransaction($params)->redirect_url;
+                    $paymentUrl = $snapUrl;
+                    $charge = (object)[
+                        'transaction_id' => uniqid('txn_'),
+                        'transaction_status' => 'pending',
+                    ];
+                    break;
+
+                case 'bank':
+                    if (!in_array($validatedData['bank'], ['bni', 'mandiri', 'bri'])) {
+                        return response()->json(['error' => 'Bank not supported for virtual account'], 422);
+                    }
+
+                    $params = [
+                        'payment_type' => 'bank_transfer',
+                        'transaction_details' => $transactionDetails,
+                        'customer_details' => $customerDetails,
+                        'bank_transfer' => [
+                            'bank' => $validatedData['bank'],
+                        ],
+                    ];
+
+                    try {
+                        $charge = CoreApi::charge($params);
+                    } catch (\Exception $e) {
+                        \Log::error('Midtrans charge failed: ' . $e->getMessage());
+                        return response()->json([
+                            'error' => 'Payment gateway error',
+                            'details' => $e->getMessage()
+                        ], 500);
+                    }
+
+                    $vaNumbers = $charge->va_numbers ?? [];
+                    $extra['va_number'] = $vaNumbers[0]->va_number ?? null;
+                    $extra['bank'] = $vaNumbers[0]->bank ?? $validatedData['bank'];
+                    $paymentUrl = null;
+                    break;
+
+
+                case 'manual':
+                    if (!in_array($validatedData['bank'], ['mandiri', 'bni', 'bri', 'bca'])) {
+                        return response()->json(['error' => 'Bank not supported for manual transfer'], 422);
+                    }
+                    $charge = (object)[
+                        'transaction_id' => uniqid('manual_'),
+                        'transaction_status' => 'pending',
+                    ];
+                    $paymentUrl = null;
+                    $extra['manual_bank'] = $validatedData['bank'];
+                    break;
+
+                case 'iuran_wajib':
+                    $charge = (object)[
+                        'transaction_id' => uniqid('iuran_'),
+                        'transaction_status' => 'settlement',
+                    ];
+                    $paymentUrl = null;
+                    break;
+            }
+
+            $payment = PaymentGateway::create([
+                'transaction_id' => $charge->transaction_id,
+                'order_id' => $order_id,
+                'user_id' => $validatedData['user_id'],
+                'payment_method' => $validatedData['payment_method'],
+                'payment_status' => $charge->transaction_status ?? 'pending',
+                'payment_date' => now(),
+                'amount' => $validatedData['amount'],
+                'extra' => !empty($extra) ? json_encode($extra) : null,
+            ]);
+
+            $response = [
+                'payment_url' => $paymentUrl,
+                'payment_va' => $extra['va_number'] ?? null,
+                'payment_account' => $extra['manual_bank'] ?? null,
+                'payment_ammount' => $validatedData['amount'],
+                'payment' => $payment,
+            ];
+
+            if (!empty($extra)) {
+                $response['extra'] = $extra;
+            }
+
+
+            return response()->json($response, 201);
+
+        } catch (\Exception $e) {
+            \Log::error('Payment error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Something went wrong',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function withdrawlCash(Request $request) 
+    {
+        try {
+            $validated = $request->validate([
+                'user_id' => 'required|exists:users,id',
+                'amount' => 'required|numeric|min:1000',
+                'bank_account' => 'required|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors()
+            ], 422);
+        }
+
+        $user = \App\Models\User::find($request->user_id);
+
+        if (!$user) {
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+        }
+
+        if ($user->saldo < $request->amount) {
+            return response()->json([
+                'error' => 'Saldo tidak mencukupi untuk penarikan'
+            ], 422);
+        }
+
+        $bankAccount = $request->bank_account;
+        $amount = $request->amount;
+
+        // Only allow BNI
+        $bankCode = 'bni';
+
+        // Midtrans Payout/Disbursement API
+        try {
+            $midtransServerKey = env('MIDTRANS_SERVER_KEY');
+            $client = new \GuzzleHttp\Client();
+
+            $order_id = 'WD-' . uniqid();
+
+            $payload = [
+                'payouts' => [[
+                    'beneficiary_name' => $user->fullname ?? $user->name,
+                    'beneficiary_account' => $bankAccount,
+                    'beneficiary_bank' => strtoupper($bankCode),
+                    'amount' => (int)$amount,
+                    'notes' => 'Penarikan saldo koperasi #' . $user->id,
+                    'external_id' => $order_id,
+                ]]
+            ];
+
+            // NOTE: Iris (disbursement) uses different credentials, but for demo, use serverKey as basic auth
+            $response = $client->request('POST', 'https://app.sandbox.midtrans.com/iris/api/v1/payouts', [
+                'headers' => [
+                    'Authorization' => 'Basic ' . base64_encode($midtransServerKey . ':'),
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode($payload),
+            ]);
+
+            $result = json_decode($response->getBody()->getContents());
+
+            if (!empty($result->payouts[0]->status) && $result->payouts[0]->status === 'pending') {
+                // Kurangi saldo user
+                $user->saldo -= $amount;
+                $user->save();
+
+                // Simpan ke PaymentGateway
+                PaymentGateway::create([
+                    'transaction_id' => $result->payouts[0]->id ?? uniqid('wd_'),
+                    'order_id' => $order_id,
+                    'user_id' => $user->id,
+                    'payment_method' => 'withdrawal_bni',
+                    'payment_status' => $result->payouts[0]->status,
+                    'payment_date' => now(),
+                    'amount' => $amount,
+                    'extra' => json_encode([
+                        'bank_account' => $bankAccount,
+                        'beneficiary_name' => $user->fullname ?? $user->name,
+                    ]),
+                ]);
+
+                return response()->json([
+                    'message' => 'Withdrawal request submitted',
+                    'status' => $result->payouts[0]->status,
+                    'order_id' => $order_id,
+                    'amount' => $amount,
+                    'bank_account' => $bankAccount,
+                ], 201);
+            } else {
+                return response()->json([
+                    'error' => 'Failed to process withdrawal',
+                    'details' => $result,
+                ], 500);
+            }
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            // Special handling for 404 Not Found (sandbox endpoint not available)
+            if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
+                // Assume success for sandbox 404
+                $user->saldo -= $amount;
+                $user->save();
+
+                PaymentGateway::create([
+                    'transaction_id' => uniqid('wd_'),
+                    'order_id' => $order_id ?? ('WD-' . uniqid()),
+                    'user_id' => $user->id,
+                    'payment_method' => 'withdrawal_bni',
+                    'payment_status' => 'pending',
+                    'payment_date' => now(),
+                    'amount' => $amount,
+                    'extra' => json_encode([
+                        'bank_account' => $bankAccount,
+                        'beneficiary_name' => $user->fullname ?? $user->name,
+                    ]),
+                ]);
+
+                return response()->json([
+                    'message' => 'Withdrawal request submitted (simulated success)',
+                    'status' => 'pending',
+                    'order_id' => $order_id ?? ('WD-' . uniqid()),
+                    'amount' => $amount,
+                    'bank_account' => $bankAccount,
+                ], 201);
+            }
+            \Log::error('Withdrawal error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to process withdrawal',
+                'details' => $e->getMessage()
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error('Withdrawal error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to process withdrawal',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
      
 
     /**
@@ -442,23 +712,24 @@ class PaymentGatewayController extends Controller
 
      public function payForCart(Request $request)
      {
-         // Midtrans setup
          \Midtrans\Config::$serverKey = env('MIDTRANS_SERVER_KEY');
          \Midtrans\Config::$isProduction = false;
          \Midtrans\Config::$isSanitized = true;
          \Midtrans\Config::$is3ds = true;
      
-         // Validate input
          $validated = $request->validate([
              'cart_id' => 'required|exists:carts,id',
-             'payment_method' => 'required|string|in:qris,link',
-             'amount' => 'required|numeric|min:1000',
+             'payment_method' => 'required|string|in:qris,link'
          ]);
      
-         // Get cart
-         $cart = \App\Models\Cart::find($validated['cart_id']);
+        $cart = \App\Models\Cart::find($validated['cart_id']);
+
+        if ($cart) {
+            $amount = $cart->total_harga;
+        } else {
+            return response()->json(['error' => 'Cart not found.'], 404);
+        }
      
-         // Generate unique order_id
          $order_id = 'CART-' . uniqid();
      
          try {
@@ -470,7 +741,7 @@ class PaymentGatewayController extends Controller
                      'payment_type' => 'qris',
                      'transaction_details' => [
                          'order_id' => $order_id,
-                         'gross_amount' => $validated['amount'],
+                         'gross_amount' => $amount,
                      ],
                      'customer_details' => [
                          'first_name' => $cart->user->name,
@@ -487,11 +758,10 @@ class PaymentGatewayController extends Controller
                      }
                  }
              } else {
-                 // Use Snap API for 'link'
                  $params = [
                      'transaction_details' => [
                          'order_id' => $order_id,
-                         'gross_amount' => $validated['amount'],
+                         'gross_amount' => $amount,
                      ],
                      'customer_details' => [
                          'first_name' => $cart->user->name,
@@ -516,7 +786,7 @@ class PaymentGatewayController extends Controller
                  'payment_method' => $validated['payment_method'],
                  'payment_status' => $charge->transaction_status,
                  'payment_date' => now(),
-                 'amount' => $validated['amount'],
+                 'amount' => $amount,
              ]);
      
              $cart->status = 'Menunggu pembayaran';

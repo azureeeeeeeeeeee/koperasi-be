@@ -89,6 +89,7 @@ Route::prefix('payment')->group(function () {
     Route::post('/pay-for-cart', [PaymentGatewayController::class, 'payForCart'])->name('payment.cart_payment');
     Route::post('/pay-for-membership', [PaymentGatewayController::class, 'payForMembership'])->name('payment.payForMembership');
     Route::post('/pay-for-topup', [PaymentGatewayController::class, 'topup'])->name('payment.topup');
+    Route::post('/withdrawl-cash', [PaymentGatewayController::class, 'withdrawlCash'])->name('payment.withdrawl');
 });
 
 // Email Routes
