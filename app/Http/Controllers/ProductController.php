@@ -237,11 +237,11 @@ class ProductController extends Controller
             }
 
             $fields = $request->validate([
-                'name' => 'required|string|max:255',
-                'price' => 'required|numeric|min:0',
-                'stock' => 'required|integer|min:0',
-                'category' => 'required|string|min:0',
-                'description' => 'required|string|min:0|max:100',
+                'name' => 'sometimes|string|max:255',
+                'price' => 'sometimes|numeric|min:0',
+                'stock' => 'sometimes|integer|min:0',
+                'category' => 'sometimes|string|min:0',
+                'description' => 'sometimes|string|min:0|max:100',
                 'image_url' => 'nullable|string',
             ]);
 
