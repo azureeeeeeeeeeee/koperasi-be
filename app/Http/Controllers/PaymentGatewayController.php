@@ -109,7 +109,7 @@ class PaymentGatewayController extends Controller
                 $extraData['manual_bank'] = $bank;
                 break;
 
-            case 'iuran_wajib':
+            case 'iuran_sukarela':
                 $charge = (object)[
                     'transaction_id' => uniqid('iuran_'),
                     'transaction_status' => 'settlement',
@@ -144,7 +144,7 @@ class PaymentGatewayController extends Controller
      *             @OA\Property(
      *                 property="payment_method",
      *                 type="string",
-     *                 enum={"qris", "gopay", "link", "bank", "manual", "iuran_wajib"},
+     *                 enum={"qris", "gopay", "link", "bank", "manual", "iuran_sukarela"},
      *                 example="qris",
      *                 description="Payment method to use"
      *             ),
@@ -253,7 +253,7 @@ class PaymentGatewayController extends Controller
 
         $validatedData = $request->validate([
             'user_id' => 'required|integer|exists:users,id',
-            'payment_method' => 'required|string|in:qris,gopay,link,bank,manual,iuran_wajib',
+            'payment_method' => 'required|string|in:qris,gopay,link,bank,manual,iuran_sukarela',
             'amount' => 'required|numeric|min:0',
             'phone' => 'required_if:payment_method,gopay|nullable|string',
             'bank' => 'required_if:payment_method,bank,manual|nullable|string|in:bni,mandiri,bri,bca',
@@ -353,7 +353,8 @@ class PaymentGatewayController extends Controller
      
          $validated = $request->validate([
              'cart_id' => 'required|exists:carts,id',
-             'payment_method' => 'required|string|in:qris,link,bank,manual,gopay,cod',
+             // Add iuran_sukarela here:
+             'payment_method' => 'required|string|in:qris,link,bank,manual,gopay,cod,iuran_sukarela',
              'bank' => 'required_if:payment_method,bank,manual|nullable|string|in:bni,mandiri,bri,bca',
              'phone' => 'required_if:payment_method,gopay|nullable|string',
              'items' => 'sometimes|array|min:1',
@@ -424,6 +425,42 @@ class PaymentGatewayController extends Controller
                  return response()->json([
                      'message' => 'Payment initiated',
                      'status' => 'cod',
+                     'order_id' => $order_id,
+                 ], 201);
+             }
+
+             // Add this block for iuran_sukarela
+             if ($validated['payment_method'] === 'iuran_sukarela') {
+                 if ($user->saldo < $amount) {
+                     return response()->json([
+                         'error' => 'Saldo iuran sukarela tidak mencukupi',
+                         'details' => 'Saldo: ' . $user->saldo . ', Total belanja: ' . $amount
+                     ], 422);
+                 }
+
+                 // Deduct saldo
+                 $user->saldo -= $amount;
+                 $user->save();
+
+                 PaymentGateway::create([
+                     'transaction_id' => $order_id,
+                     'order_id' => $order_id,
+                     'user_id' => $cart->user_id,
+                     'cart_id' => $cart->id,
+                     'payment_method' => $validated['payment_method'],
+                     'payment_status' => "settlement",
+                     'payment_date' => now(),
+                     'amount' => $amount,
+                 ]);
+
+                 $cart->status_barang = 'akan dikirim';
+                 $cart->sudah_bayar = true;
+                 $cart->status = 'Paid';
+                 $cart->save();
+
+                 return response()->json([
+                     'message' => 'Pembayaran berhasil menggunakan iuran sukarela',
+                     'status' => 'settlement',
                      'order_id' => $order_id,
                  ], 201);
              }
@@ -516,13 +553,13 @@ class PaymentGatewayController extends Controller
 
         $validated = $request->validate([
             'user_id' => 'required|exists:users,id',
-            'payment_method' => 'required|string|in:qris,link,bank,manual,gopay,iuran_wajib',
+            'payment_method' => 'required|string|in:qris,link,bank,manual,gopay,iuran_sukarela',
             'bank' => 'required_if:payment_method,bank,manual|nullable|string|in:bni,mandiri,bri,bca',
             'phone' => 'required_if:payment_method,gopay|nullable|string',
         ]);
 
         $user = \App\Models\User::find($validated['user_id']);
-        $config = ModelsConfig::where('key', 'iuran wajib')->first();
+        $config = ModelsConfig::where('key', 'iuran sukarela')->first();
         $amount = $config ? (int) $config->value : 15000;
         $order_id = 'MEMB-' . uniqid();
 
@@ -854,7 +891,7 @@ class PaymentGatewayController extends Controller
     //      // Get user
     //      $user = \App\Models\User::find($validated['user_id']);
 
-    //      $config = ModelsConfig::where('key', 'iuran wajib')->first();
+    //      $config = ModelsConfig::where('key', 'iuran sukarela')->first();
     //      $amount = $config ? (int) $config->value : 15000; 
      
     //      // Generate unique order_id
