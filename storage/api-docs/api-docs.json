@@ -371,6 +371,82 @@
                 ]
             }
         },
+        "/admin/user/membership/reset": {
+            "put": {
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Reset status keanggotaan pengguna & penitip",
+                "description": "Mereset status_keanggotaan semua user dengan tipe 'penitip' dan 'pengguna' menjadi 'tidak aktif'. Hanya bisa diakses oleh admin.",
+                "operationId": "ef5ec3eda4a2302001c8adcc4feb0f42",
+                "responses": {
+                    "200": {
+                        "description": "Status keanggotaan berhasil direset",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Status keanggotaan semua user dengan tipe penitip dan pengguna telah diubah menjadi tidak aktif"
+                                        },
+                                        "jumlah_user": {
+                                            "type": "integer",
+                                            "example": 12
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Tidak ada user dengan tipe penitip atau pengguna",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tidak ada user dengan tipe penitip atau pengguna"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Akses ditolak - bukan admin",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Akses ditolak. Hanya admin yang dapat mengakses endpoint ini."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/auth/login": {
             "post": {
                 "tags": [
