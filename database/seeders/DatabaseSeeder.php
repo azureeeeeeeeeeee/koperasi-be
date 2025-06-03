@@ -67,6 +67,8 @@ class DatabaseSeeder extends Seeder
             'stock' => 10,
             'category_id' => 1,
             'user_id' => 1,
+            'image_url' => 'local:image.png',
+            'status' => 'Onlisting',
         ]);
 
         Config::create([

@@ -161,11 +161,12 @@ class ProductController extends Controller
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|min:0',
                 'stock' => 'required|integer|min:0',
-                'image_url' => 'required|string',
+                'image_url' => 'nullable|string',
                 'description' => 'required|string|max:100',
-                'category' => 'required|string|max:30'
+                'category' => 'required|string|max:30',
             ]);
 
+            $fields['status'] = 'Onlisting';
             $fields['user_id'] = $request->user()->id;
             $fields['category_id'] = Category::where('name', $fields['category'])->firstOrFail()->id;
 
@@ -243,6 +244,7 @@ class ProductController extends Controller
                 'category' => 'sometimes|string|min:0',
                 'description' => 'sometimes|string|min:0|max:100',
                 'image_url' => 'nullable|string',
+                'status' => 'sometimes|in:Onlisting,Inactive',
             ]);
 
             $fields['user_id'] = $request->user()->id;
