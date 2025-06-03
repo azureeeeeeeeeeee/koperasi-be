@@ -130,6 +130,7 @@ class ConfigController extends Controller
         Gate::authorize('create', Config::class);
         $fields = $request->validate([
             'key' => 'required|string|max:255|unique:configs',
+            'key2' => 'required|integer',
             'value' => 'required|string|max:255',
         ]);
 
@@ -189,6 +190,7 @@ class ConfigController extends Controller
         $fields = $request->validate([
             'key' => 'sometimes|required|string|max:255|unique:configs,key,' . $id,
             'value' => 'sometimes|required|string|max:255',
+            'key2' => 'sometimes|required|integer',
         ]);
 
         $config->update($fields);

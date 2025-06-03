@@ -73,6 +73,7 @@ class DatabaseSeeder extends Seeder
 
         Config::create([
             'key' => 'iuran wajib',
+            'key2'=> 24,
             'value' => '30000',
         ]);
     }
