@@ -576,7 +576,7 @@ class PaymentGatewayController extends Controller
                      'amount' => $cart->total_harga,
                  ]);
 
-                $cart->status = 'akan dikirim';
+                $cart->status_barang = 'akan dikirim';
                 $cart->sudah_bayar = true;
                 $cart->save();
 
