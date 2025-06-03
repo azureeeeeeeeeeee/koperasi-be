@@ -787,13 +787,13 @@ class PaymentGatewayController extends Controller
          \Midtrans\Config::$is3ds = true;
      
          $validated = $request->validate([
-             'user_id' => 'required|exists:carts,id',
+             'cart_id' => 'required|exists:carts,id',
              'payment_method' => 'required|string|in:qris,link,bank,manual,gopay',
              'bank' => 'required_if:payment_method,bank,manual|nullable|string|in:bni,mandiri,bri,bca',
              'phone' => 'required_if:payment_method,gopay|nullable|string',
          ]);
      
-         $cart = \App\Models\Cart::find($validated['user_id']);
+         $cart = \App\Models\Cart::find($validated['cart_id']);
          if (!$cart) {
              return response()->json(['error' => 'User cart not found.'], 404);
          }
