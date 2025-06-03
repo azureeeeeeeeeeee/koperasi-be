@@ -245,6 +245,10 @@
                                         ],
                                         "example": "active"
                                     },
+                                    "nomor_hp": {
+                                        "type": "string",
+                                        "example": "0800-0000-0000"
+                                    },
                                     "saldo": {
                                         "type": "number",
                                         "format": "float",
@@ -625,6 +629,10 @@
                                     "fullname": {
                                         "type": "string",
                                         "example": "John Doe Updated"
+                                    },
+                                    "nomor_hp": {
+                                        "type": "string",
+                                        "example": "0800-0000-0000"
                                     }
                                 },
                                 "type": "object"

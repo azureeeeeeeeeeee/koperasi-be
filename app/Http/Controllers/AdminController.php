@@ -205,6 +205,7 @@ class AdminController extends Controller
      *             @OA\Property(property="email", type="string", format="email", example="updated@student.itk.ac.id"),
      *             @OA\Property(property="tipe", type="string", enum={"pengguna", "pegawai", "penitip", "admin"}, example="pengguna"),
      *             @OA\Property(property="status_keanggotaan", type="string", enum={"aktif", "tidak aktif", "suspended"}, example="active"),
+     *             @OA\Property(property="nomor_hp", type="string", example="0800-0000-0000"),
      *             @OA\Property(property="saldo", type="number", format="float", example=50000),
      *         )
      *     ),
@@ -234,6 +235,7 @@ class AdminController extends Controller
             'email' => 'sometimes|email|unique:users,email,'.$id,
             'tipe' => 'sometimes|in:penitip,pengguna,pegawai,admin',
             'status_keanggotaan' => 'sometimes|in:aktif,tidak aktif,bukan anggota',
+            'nomor_hp' => 'sometimes|string|unique:users,nomor_hp,'.$id,
             'saldo' => 'sometimes|numeric',
         ]);
 

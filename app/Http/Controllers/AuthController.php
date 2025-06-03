@@ -392,6 +392,7 @@ class AuthController extends Controller
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="fullname", type="string", example="John Doe Updated"),
+     *             @OA\Property(property="nomor_hp", type="string", example="0800-0000-0000"),
      *         )
      *     ),
      *     @OA\Response(
@@ -412,7 +413,8 @@ class AuthController extends Controller
         $user = $request->user();
     
         $validated = $request->validate([
-            'fullname' => 'sometimes|string|max:255'
+            'fullname' => 'sometimes|string|max:255',
+            'nomor_hp' => 'sometimes|string|unique:users,nomor_hp,' . $user->id,
         ]);
 
         $user->update($validated);
