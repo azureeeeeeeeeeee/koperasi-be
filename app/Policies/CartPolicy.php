@@ -9,7 +9,7 @@ class CartPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->tipe == 'admin';
+        return $user->tipe == 'admin' || $user->tipe == 'pegawai';
     }
 
     public function create(User $user, Cart $cart): bool
