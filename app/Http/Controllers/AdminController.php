@@ -205,6 +205,7 @@ class AdminController extends Controller
      *             @OA\Property(property="email", type="string", format="email", example="updated@student.itk.ac.id"),
      *             @OA\Property(property="tipe", type="string", enum={"pengguna", "pegawai", "penitip", "admin"}, example="pengguna"),
      *             @OA\Property(property="status_keanggotaan", type="string", enum={"aktif", "tidak aktif", "suspended"}, example="active"),
+     *             @OA\Property(property="nomor_hp", type="string", example="0800-0000-0000"),
      *             @OA\Property(property="saldo", type="number", format="float", example=50000),
      *         )
      *     ),
@@ -234,6 +235,7 @@ class AdminController extends Controller
             'email' => 'sometimes|email|unique:users,email,'.$id,
             'tipe' => 'sometimes|in:penitip,pengguna,pegawai,admin',
             'status_keanggotaan' => 'sometimes|in:aktif,tidak aktif,bukan anggota',
+            'nomor_hp' => 'sometimes|string|unique:users,nomor_hp,'.$id,
             'saldo' => 'sometimes|numeric',
         ]);
 
@@ -241,6 +243,68 @@ class AdminController extends Controller
 
         return response()->json([
             'message' => 'Data user berhasil diperbarui',
+        ], 200);
+    }
+
+
+
+    /**
+     * @OA\Put(
+     *     path="/admin/user/membership/reset",
+     *     tags={"Admin"},
+     *     summary="Reset status keanggotaan pengguna & penitip",
+     *     description="Mereset status_keanggotaan semua user dengan tipe 'penitip' dan 'pengguna' menjadi 'tidak aktif'. Hanya bisa diakses oleh admin.",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Status keanggotaan berhasil direset",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Status keanggotaan semua user dengan tipe penitip dan pengguna telah diubah menjadi tidak aktif"),
+     *             @OA\Property(property="jumlah_user", type="integer", example=12)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Tidak ada user dengan tipe penitip atau pengguna",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string", example="Tidak ada user dengan tipe penitip atau pengguna")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=403,
+     *         description="Akses ditolak - bukan admin",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Akses ditolak. Hanya admin yang dapat mengakses endpoint ini.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
+    public function reset_status_keanggotaan(Request $request)
+    {
+        $penitip = User::where('tipe', 'penitip')->get();
+        $pengguna = User::where('tipe', 'pengguna')->get();
+
+        if (!$penitip->count() && !$pengguna->count()) {
+            return response()->json([
+                'message' => 'Tidak ada user dengan tipe penitip atau pengguna',
+            ], 404);
+        }
+        
+        foreach ($penitip as $user) {
+            $user->update(['status_keanggotaan' => 'tidak aktif']);
+        }
+        
+        foreach ($pengguna as $user) {
+            $user->update(['status_keanggotaan' => 'tidak aktif']);
+        }
+    
+        return response()->json([
+            'message' => 'Status keanggotaan semua user dengan tipe penitip dan pengguna telah diubah menjadi tidak aktif',
         ], 200);
     }
 }
