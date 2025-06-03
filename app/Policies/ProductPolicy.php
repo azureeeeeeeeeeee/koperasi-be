@@ -31,6 +31,10 @@ class ProductPolicy
             return true;
         }
 
+        if ($user->tipe == 'pegawai'){
+            return true;
+        }
+
         return $user->id == $product->user_id;
     }
 
@@ -41,6 +45,10 @@ class ProductPolicy
     {
         if ($user->tipe == 'admin') {
             return true;
+        }
+
+        if ($user->tipe == 'pegawai'){
+        return true;
         }
 
         return $user->id == $product->user_id;
