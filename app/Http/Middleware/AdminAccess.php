@@ -10,7 +10,7 @@ class AdminAccess
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user() && $request->user()->tipe === 'admin') {
+        if ($request->user() && $request->user()->tipe === 'admin' || $request->user()->tipe === 'pegawai') {
             return $next($request);
         }
 

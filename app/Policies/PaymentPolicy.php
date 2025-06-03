@@ -69,6 +69,9 @@ class PaymentPolicy
         if ($user->tipe === 'admin') {
             return true;
         }
+        if ($user->tipe === 'pegawai') {
+            return true;
+        }
         if ($user->tipe === 'pengguna') {
             return true;
         }
