@@ -2462,7 +2462,7 @@
                 "tags": [
                     "Payment Gateway"
                 ],
-                "summary": "Create a new payment using QRIS or payment link",
+                "summary": "Create a new payment via Midtrans or manual/iuran methods",
                 "operationId": "645c1dff4961fbac6b50d2ee13e828dc",
                 "requestBody": {
                     "required": true,
@@ -2481,13 +2481,41 @@
                                         "example": 1
                                     },
                                     "payment_method": {
-                                        "description": "Payment method to use (qris or link)",
+                                        "description": "Payment method to use",
                                         "type": "string",
                                         "enum": [
                                             "qris",
-                                            "link"
+                                            "gopay",
+                                            "link",
+                                            "bank",
+                                            "manual",
+                                            "iuran_wajib"
                                         ],
                                         "example": "qris"
+                                    },
+                                    "amount": {
+                                        "description": "Amount to be paid",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000
+                                    },
+                                    "phone": {
+                                        "description": "Phone number (required for GoPay)",
+                                        "type": "string",
+                                        "example": "08123456789",
+                                        "nullable": true
+                                    },
+                                    "bank": {
+                                        "description": "Bank code (required for 'bank' or 'manual' methods)",
+                                        "type": "string",
+                                        "enum": [
+                                            "bni",
+                                            "mandiri",
+                                            "bri",
+                                            "bca"
+                                        ],
+                                        "example": "bni",
+                                        "nullable": true
                                     }
                                 },
                                 "type": "object"
@@ -2503,12 +2531,31 @@
                                 "schema": {
                                     "properties": {
                                         "payment_url": {
-                                            "description": "Redirect URL for payment (QR code or Snap payment link)",
+                                            "description": "Redirect or QR code URL for payment",
                                             "type": "string",
-                                            "example": "https://app.sandbox.midtrans.com/snap/v2/vtweb/ABC123"
+                                            "example": "https://app.sandbox.midtrans.com/snap/v2/vtweb/ABC123",
+                                            "nullable": true
+                                        },
+                                        "payment_va": {
+                                            "description": "Virtual account number (if using 'bank' method)",
+                                            "type": "string",
+                                            "example": "1234567890",
+                                            "nullable": true
+                                        },
+                                        "payment_account": {
+                                            "description": "Bank name for manual transfer (if using 'manual' method)",
+                                            "type": "string",
+                                            "example": "bni",
+                                            "nullable": true
+                                        },
+                                        "payment_ammount": {
+                                            "description": "Total amount charged",
+                                            "type": "number",
+                                            "format": "float",
+                                            "example": 100000
                                         },
                                         "payment": {
-                                            "description": "Payment details",
+                                            "description": "Details of the saved payment",
                                             "properties": {
                                                 "transaction_id": {
                                                     "type": "string",
@@ -2542,6 +2589,27 @@
                                                 }
                                             },
                                             "type": "object"
+                                        },
+                                        "extra": {
+                                            "description": "Optional additional payment info (e.g., VA number, bank name)",
+                                            "type": "object",
+                                            "nullable": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Bank not supported for virtual account"
                                         }
                                     },
                                     "type": "object"
