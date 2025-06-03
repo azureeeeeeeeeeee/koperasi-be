@@ -81,7 +81,7 @@ class ConfigController extends Controller
      * )
      */
     public function show(int $id) {
-        Gate::authorize('view', Config::class);
+        // Gate::authorize('view', Config::class);
         $config = Config::find($id);
         if (!$config) {
             return response()->json([
@@ -96,9 +96,6 @@ class ConfigController extends Controller
             'data' => $config,
         ], 200);
     }
-
-
-
 
     /**
      * @OA\Post(
