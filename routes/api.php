@@ -10,6 +10,8 @@ use App\Http\Controllers\PaymentGatewayController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EmailController;
+use App\Models\User;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -110,3 +112,31 @@ Route::prefix('config')->group(function () {
     Route::put('/{id}', [ConfigController::class, 'update'])->name('config.update')->middleware('auth:sanctum');
     Route::delete('/{id}', [ConfigController::class, 'delete'])->name('config.delete')->middleware('auth:sanctum');
 });
+
+
+Route::put('/admin/user/membership/reset', function (Request $request) {
+    $user = $request->user();
+
+    if (!$user || $user->tipe !== 'admin') {
+        return response()->json([
+            'success' => false,
+            'message' => 'Akses ditolak. Hanya admin yang dapat mengakses endpoint ini.',
+        ], 403);
+    }
+
+    $users = User::whereIn('tipe', ['penitip', 'pengguna'])->get();
+
+    if ($users->isEmpty()) {
+        return response()->json([
+            'message' => 'Tidak ada user dengan tipe penitip atau pengguna',
+        ], 404);
+    }
+
+    foreach ($users as $u) {
+        $u->update(['status_keanggotaan' => 'tidak aktif']);
+    }
+
+    return response()->json([
+        'message' => 'Status keanggotaan semua user dengan tipe penitip dan pengguna telah diubah menjadi tidak aktif',
+    ], 200);
+})->middleware('auth:sanctum');
