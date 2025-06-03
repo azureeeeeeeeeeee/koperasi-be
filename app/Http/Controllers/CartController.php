@@ -587,7 +587,7 @@ class CartController extends Controller
     public function update_status_barang(Request $request, string $id_user)
     {
         $fields = $request->validate([
-            'status' => 'required|in:menunggu pegawai,akan dikirim,sudah dibooking,diterima pembeli',
+            'status' => 'required|in:menunggu pegawai,akan dikirim,sedang dikirim,sudah dibooking,diterima pembeli',
         ]);
 
         $userExists = User::where('id', $id_user)->exists();

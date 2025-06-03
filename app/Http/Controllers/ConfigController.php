@@ -81,7 +81,7 @@ class ConfigController extends Controller
      * )
      */
     public function show(int $id) {
-        Gate::authorize('view', Config::class);
+        // Gate::authorize('view', Config::class);
         $config = Config::find($id);
         if (!$config) {
             return response()->json([
@@ -96,9 +96,6 @@ class ConfigController extends Controller
             'data' => $config,
         ], 200);
     }
-
-
-
 
     /**
      * @OA\Post(
@@ -130,6 +127,7 @@ class ConfigController extends Controller
         Gate::authorize('create', Config::class);
         $fields = $request->validate([
             'key' => 'required|string|max:255|unique:configs',
+            'key2' => 'required|integer',
             'value' => 'required|string|max:255',
         ]);
 
@@ -189,6 +187,7 @@ class ConfigController extends Controller
         $fields = $request->validate([
             'key' => 'sometimes|required|string|max:255|unique:configs,key,' . $id,
             'value' => 'sometimes|required|string|max:255',
+            'key2' => 'sometimes|required|integer',
         ]);
 
         $config->update($fields);

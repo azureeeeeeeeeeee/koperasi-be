@@ -15,6 +15,7 @@ return new class extends Migration
             $table->enum('status_barang', [
                 'menunggu pegawai',
                 'akan dikirim',
+                'sedang dikirim',
                 'sudah dibooking',
                 'diterima pembeli'
             ])->after('updated_at')->default('menunggu pegawai');
