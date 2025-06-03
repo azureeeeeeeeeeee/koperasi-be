@@ -37,7 +37,7 @@ class ConfigPolicy
      */
     public function update(User $user): bool
     {
-        return $user->tipe === 'admin';
+        return $user->tipe === 'admin' || $user->tipe === 'pegawai';
     }
 
     /**
