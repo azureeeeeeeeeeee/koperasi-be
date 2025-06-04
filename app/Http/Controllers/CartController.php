@@ -247,7 +247,7 @@ class CartController extends Controller
                 'category' => $product->category ?? null,
                 'price' => $product->price,
                 'jumlah' => $product->pivot->jumlah,
-                'subtotal' => ($product->price * (1 + $product->cateegory->potongan)) * $product->pivot->jumlah
+                'subtotal' => ($product->price * (1 + $product->category->potongan)) * $product->pivot->jumlah
             ];
         });
 
